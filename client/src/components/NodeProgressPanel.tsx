@@ -5,7 +5,7 @@
  * Active node pulses and viewport zooms to center it.
  */
 
-import React, { useEffect, useMemo, useCallback, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import ReactFlow, {
   ReactFlowProvider,
   useReactFlow,
@@ -22,6 +22,8 @@ interface NodeProgressPanelProps {
   rootNodeId: string;
   activeNodeId: string | null;
   visitedNodeIds: Set<string>;
+  /** Increments each time the surrounding layout finishes a transition (e.g. weights collapse/expand) */
+  layoutEpoch?: number;
 }
 
 /* ── inner component (needs ReactFlowProvider) ────────────── */
@@ -30,9 +32,11 @@ const NodeProgressInner: React.FC<NodeProgressPanelProps> = ({
   edges: treeEdges,
   activeNodeId,
   visitedNodeIds,
+  layoutEpoch = 0,
 }) => {
   const { setCenter, fitView } = useReactFlow();
-  const initialFitDone = useRef(false);
+  const prevActiveNodeId = useRef<string | null>(null);  // always start null to detect first node
+  const pendingInitialZoom = useRef(false);
 
   /** Serialise visitedNodeIds so useMemo doesn't stale-close over the Set ref */
   const visitedKey = useMemo(() => [...visitedNodeIds].sort().join(","), [visitedNodeIds]);
@@ -101,30 +105,65 @@ const NodeProgressInner: React.FC<NodeProgressPanelProps> = ({
     });
   }, [treeEdges, activeNodeId, visitedKey]);
 
-  /* Initial fit, then zoom to active node on changes */
-  const zoomToActive = useCallback(() => {
+  /* Zoom to the active node only when activeNodeId actually changes */
+  useEffect(() => {
+    const prev = prevActiveNodeId.current;
+    prevActiveNodeId.current = activeNodeId;
+
+    // Only act on actual node transitions
+    if (prev === activeNodeId) return;
+    if (!activeNodeId) return;
+
+    if (prev === null) {
+      // First node of a run — defer zoom until layout settles (weights collapse)
+      pendingInitialZoom.current = true;
+      return;
+    }
+
+    // Subsequent node transitions: zoom directly
+    const node = treeNodes.find((n) => n.id === activeNodeId);
+    if (!node) return;
+    const t = setTimeout(() => {
+      setCenter(node.position.x + 100, node.position.y + 40, {
+        zoom: 1.4,
+        duration: 800,
+      });
+    }, 150);
+    return () => clearTimeout(t);
+  }, [activeNodeId, treeNodes, setCenter]);
+
+  /* After any layout transition (weights collapse/expand), re-zoom to active node */
+  useEffect(() => {
     if (!activeNodeId) return;
     const node = treeNodes.find((n) => n.id === activeNodeId);
     if (!node) return;
-    setCenter(node.position.x + 100, node.position.y + 40, {
-      zoom: 1.4,
-      duration: 800,
-    });
-  }, [activeNodeId, treeNodes, setCenter]);
 
-  useEffect(() => {
-    if (!initialFitDone.current) {
-      // First render: fit the whole graph, then zoom after a beat
-      initialFitDone.current = true;
+    if (pendingInitialZoom.current) {
+      // Initial zoom after first weights collapse
+      pendingInitialZoom.current = false;
       const t = setTimeout(() => {
         fitView({ padding: 0.2, duration: 400 });
-        setTimeout(zoomToActive, 500);
-      }, 200);
+        setTimeout(() => {
+          setCenter(node.position.x + 100, node.position.y + 40, {
+            zoom: 1.4,
+            duration: 800,
+          });
+        }, 500);
+      }, 50);
       return () => clearTimeout(t);
     }
-    const t = setTimeout(zoomToActive, 150);
+
+    // Re-zoom after any subsequent layout change
+    const t = setTimeout(() => {
+      setCenter(node.position.x + 100, node.position.y + 40, {
+        zoom: 1.4,
+        duration: 600,
+      });
+    }, 100);
     return () => clearTimeout(t);
-  }, [zoomToActive, fitView]);
+    // layoutEpoch is the trigger
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layoutEpoch]);
 
   return (
     <>

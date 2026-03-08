@@ -41,6 +41,7 @@ export const TreeRunner: React.FC<TreeRunnerProps> = ({ tree, onClose }) => {
   const [visitedNodeIds, setVisitedNodeIds] = useState<Set<string>>(new Set());
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
   const [weightsExpanded, setWeightsExpanded] = useState(true);
+  const [layoutEpoch, setLayoutEpoch] = useState(0);
   const [expandedWeightId, setExpandedWeightId] = useState<string | null>(null);
   const [scaffoldMarkdown, setScaffoldMarkdown] = useState<string | null>(null);
   const [scaffoldDir, setScaffoldDir] = useState("");
@@ -752,6 +753,11 @@ export const TreeRunner: React.FC<TreeRunnerProps> = ({ tree, onClose }) => {
                 transition: "max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease",
                 opacity: weightsExpanded ? 1 : 0,
               }}
+              onTransitionEnd={(e) => {
+                if (e.propertyName === "max-height") {
+                  setLayoutEpoch((n) => n + 1);
+                }
+              }}
             >
               <div style={{ padding: 12, display: "flex", flexDirection: "column", alignItems: "center" }}>
                 <p style={{ fontSize: 10, color: "rgba(200,210,230,0.4)", marginBottom: 10, textAlign: "center" }}>
@@ -871,6 +877,7 @@ export const TreeRunner: React.FC<TreeRunnerProps> = ({ tree, onClose }) => {
                 rootNodeId={tree.rootNodeId}
                 activeNodeId={activeNodeId}
                 visitedNodeIds={visitedNodeIds}
+                layoutEpoch={layoutEpoch}
               />
             </div>
           ) : (

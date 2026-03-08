@@ -6,6 +6,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.3.1] — 2026-03-08
+
+### Fixed
+- **Auto-zoom no longer fights manual pan/zoom** — the node progress graph now only auto-zooms on actual node transitions. Manually panning or zooming between transitions is no longer immediately overridden.
+- **First-node auto-zoom on run start** — the initial zoom is deferred until the Decision Weights panel collapse animation completes, so the viewport correctly centers on the first active node instead of staying at the top.
+- **Re-zoom on weights panel toggle** — expanding or collapsing the Decision Weights panel now triggers an automatic re-zoom to the active node after the transition finishes, keeping the node centered regardless of layout changes.
+
+---
+
 ## [1.3.0] — 2026-03-07
 
 ### Added
