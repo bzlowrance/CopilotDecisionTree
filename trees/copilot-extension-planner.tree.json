@@ -1,0 +1,357 @@
+{
+  "id": "copilot-extension-planner",
+  "name": "GitHub Copilot Extension Planner",
+  "description": "Plan and scaffold a GitHub Copilot Extension — from concept to project structure, package.json, and entry-point code — powered by Copilot itself",
+  "version": "1.0.0",
+  "rootNodeId": "input_ext_type",
+  "tags": [
+    "copilot",
+    "extensions",
+    "github",
+    "scaffold",
+    "developer-tools",
+    "demo"
+  ],
+  "createdAt": "2026-03-07T00:00:00Z",
+  "updatedAt": "2026-03-08T05:51:01.205Z",
+  "defaultWeights": [
+    {
+      "id": "codeDetail",
+      "label": "Code Detail",
+      "description": "How complete the generated code should be — high produces ready-to-run files, low gives outlines",
+      "value": 80,
+      "color": "#6366F1",
+      "icon": "📝"
+    },
+    {
+      "id": "bestPractices",
+      "label": "Best Practices",
+      "description": "How strictly the scaffold follows GitHub's extension best practices and patterns",
+      "value": 75,
+      "color": "#22C55E",
+      "icon": "✅"
+    },
+    {
+      "id": "creativity",
+      "label": "Creativity",
+      "description": "How much creative latitude Copilot has in suggesting features and architecture",
+      "value": 60,
+      "color": "#F59E0B",
+      "icon": "💡"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "input_ext_type",
+      "type": "input",
+      "label": "Extension Type",
+      "description": "What kind of Copilot extension are you building?",
+      "position": {
+        "x": 30,
+        "y": 30
+      },
+      "inputType": "choice",
+      "variableName": "extType",
+      "choices": [
+        "Chat Participant (VS Code)",
+        "Copilot Agent (GitHub.com)",
+        "Skillset (API-backed)",
+        "VS Code Extension w/ Copilot API"
+      ],
+      "prompt": "Choose the type of GitHub Copilot extension you want to build:"
+    },
+    {
+      "id": "input_name",
+      "type": "input",
+      "label": "Extension Name",
+      "description": "Give your extension a name",
+      "position": {
+        "x": 430,
+        "y": 30
+      },
+      "inputType": "text",
+      "variableName": "extensionName",
+      "prompt": "What's the name of your Copilot extension? (e.g., @azure-helper, @pr-reviewer, @doc-writer)"
+    },
+    {
+      "id": "input_purpose",
+      "type": "input",
+      "label": "What It Does",
+      "description": "Describe the extension's purpose in 1-2 sentences",
+      "position": {
+        "x": 830,
+        "y": 30
+      },
+      "inputType": "text",
+      "variableName": "purpose",
+      "prompt": "In 1-2 sentences, what should your extension do? Be specific about its core capability."
+    },
+    {
+      "id": "input_capabilities",
+      "type": "input",
+      "label": "Capabilities",
+      "description": "Select the capabilities your extension needs",
+      "position": {
+        "x": 1230,
+        "y": 30
+      },
+      "inputType": "multiselect",
+      "variableName": "capabilities",
+      "choices": [
+        "Streaming responses",
+        "Tool / function calling",
+        "File & workspace context",
+        "Web search & URL fetching",
+        "Authentication (OAuth)",
+        "Custom UI (WebView panels)",
+        "Code generation & insertion",
+        "Image / vision support"
+      ],
+      "prompt": "Which capabilities should your extension support? Select all that apply:",
+      "weightInfluence": [
+        {
+          "dimension": "creativity",
+          "direction": "accept",
+          "strength": 0.5
+        }
+      ]
+    },
+    {
+      "id": "assumption_tests",
+      "type": "assumption",
+      "label": "Include Test Suite?",
+      "description": "Should the scaffold include a comprehensive test suite with unit tests, integration tests, and CI configuration?",
+      "position": {
+        "x": 1630,
+        "y": 30
+      },
+      "assumption": "The scaffold should include a comprehensive test suite — unit tests for handlers, integration tests for the extension lifecycle, and a CI workflow (GitHub Actions) to run them automatically",
+      "variableName": "includeTests",
+      "default": true,
+      "weightInfluence": [
+        {
+          "dimension": "bestPractices",
+          "direction": "accept",
+          "strength": 0.9
+        }
+      ]
+    },
+    {
+      "id": "input_language",
+      "type": "input",
+      "label": "Language",
+      "description": "Choose the implementation language",
+      "position": {
+        "x": 2030,
+        "y": 30
+      },
+      "inputType": "choice",
+      "variableName": "language",
+      "choices": [
+        "TypeScript (recommended)",
+        "Python",
+        "C# / .NET"
+      ],
+      "prompt": "Which language will you build your extension in?"
+    },
+    {
+      "id": "decision_needs_hosting",
+      "type": "decision",
+      "label": "Needs Hosting?",
+      "description": "Server-side extensions need a hosting target; VS Code-only extensions don't",
+      "position": {
+        "x": 2430,
+        "y": 30
+      },
+      "condition": "Does this extension type require server-side hosting?",
+      "evaluateExpression": "extType === 'Copilot Agent (GitHub.com)' || extType === 'Skillset (API-backed)' ? 'yes' : 'no'",
+      "weightBias": [
+        {
+          "dimension": "bestPractices",
+          "favorsBranch": "yes",
+          "strength": 0.4
+        }
+      ]
+    },
+    {
+      "id": "input_hosting",
+      "type": "input",
+      "label": "Hosting Target",
+      "description": "Where will your extension be hosted?",
+      "position": {
+        "x": 2830,
+        "y": 72.5
+      },
+      "inputType": "choice",
+      "variableName": "hosting",
+      "choices": [
+        "Azure App Service",
+        "Azure Functions (serverless)",
+        "GitHub Codespaces (dev)",
+        "Docker / Container Apps",
+        "Vercel / Cloudflare Workers"
+      ],
+      "prompt": "Where do you plan to host your extension's backend?"
+    },
+    {
+      "id": "action_interpret_weights",
+      "type": "action",
+      "label": "Analyze Weight Strategy",
+      "description": "Copilot SDK interprets the current weight settings and produces a generation strategy",
+      "position": {
+        "x": 3230,
+        "y": 30
+      },
+      "actionType": "copilot_prompt",
+      "resultVariable": "weightStrategy",
+      "weightInfluence": [
+        {
+          "dimension": "codeDetail",
+          "direction": "accept",
+          "strength": 1
+        },
+        {
+          "dimension": "bestPractices",
+          "direction": "accept",
+          "strength": 1
+        },
+        {
+          "dimension": "creativity",
+          "direction": "accept",
+          "strength": 1
+        }
+      ],
+      "template": "Analyze the following weight configuration and produce a concise code-generation strategy.\n\nThe user is building a {{language}} GitHub Copilot Extension ({{extType}}) called {{extensionName}}.\nCapabilities: {{capabilities}}\nInclude test suite: {{includeTests}}\n\nBased on the weight values provided, produce a SHORT bullet-point strategy (max 8 bullets) that describes:\n- How detailed should the generated code be?\n- What level of error handling, validation, and security patterns to include?\n- Whether to suggest bonus features or stick strictly to requirements?\n- What testing approach to take (based on includeTests and the weights)?\n- Any other concrete guidance that these specific weight values imply for code generation.\n\nBe specific and actionable. Each bullet should be a clear instruction a code generator can follow.",
+      "systemPrompt": "You are an AI project architect. Your job is to translate abstract weight/priority settings into concrete, actionable code-generation instructions.\n\nYou will receive weight dimensions with values from 0-100. Interpret them holistically — don't just repeat the labels. Think about what COMBINATION of these weights means for the code that should be generated.\n\nFor example:\n- High detail + Low best practices = rapid prototype with full code but no guardrails\n- Low detail + High creativity = creative architecture sketch with innovative ideas but outline-level code\n- High everything = production-grade, feature-rich, well-tested code\n- Low everything = minimal viable snippet\n\nOutput ONLY the bullet-point strategy. No preamble, no explanation of what weights are. Just the actionable instructions."
+    },
+    {
+      "id": "action_scaffold",
+      "type": "action",
+      "label": "Generate Extension Scaffold",
+      "description": "Copilot generates the full project scaffold shaped by the weight strategy",
+      "position": {
+        "x": 3630,
+        "y": 30
+      },
+      "actionType": "copilot_prompt",
+      "weightInfluence": [
+        {
+          "dimension": "codeDetail",
+          "direction": "accept",
+          "strength": 1
+        },
+        {
+          "dimension": "bestPractices",
+          "direction": "accept",
+          "strength": 1
+        },
+        {
+          "dimension": "creativity",
+          "direction": "accept",
+          "strength": 0.8
+        }
+      ],
+      "template": "Generate a project scaffold for a GitHub Copilot Extension.\n\n## Extension Details\n- **Type**: {{extType}}\n- **Name**: {{extensionName}}\n- **Purpose**: {{purpose}}\n- **Capabilities**: {{capabilities}}\n- **Language**: {{language}}\n- **Hosting**: {{hosting}}\n- **Include test suite**: {{includeTests}}\n\n## Generation Strategy (from weight analysis)\n{{weightStrategy}}\n\n## Generate the following:\n\n### 1. Project Structure\nShow the full directory tree.\n\n### 2. package.json (or equivalent manifest)\nWith dependencies, scripts, and extension metadata.\n\n### 3. Entry Point Code\nThe main extension file with activation, handler skeletons, types, and comments.\n\n### 4. Test Files (if includeTests is true)\nUnit tests and integration test scaffolds.\n\n### 5. README.md\nSetup, commands, development workflow, deployment.\n\n### 6. Configuration\n.env.example and any GitHub App / copilot-extensions.yml needed.\n\nFollow the generation strategy above precisely — it was derived from the user's weight preferences.",
+      "systemPrompt": "You are a senior developer who specializes in building GitHub Copilot Extensions.\n\nCRITICAL OUTPUT FORMAT: Every code block MUST start with a file path comment on the first line inside the fence:\n```typescript\n// file: src/index.ts\n... code ...\n```\n```json\n// file: package.json\n{ ... }\n```\n```yaml\n# file: .github/copilot-extensions.yml\n```\n```env\n# file: .env.example\n```\nThis annotation is required so output can be saved directly to disk.\n\nCRITICAL: Follow the Generation Strategy section in the prompt EXACTLY. It contains specific instructions derived from the user's weight settings. Do not deviate. The strategy controls whether you generate full implementations or skeletons, whether you add security hardening or skip it, whether you suggest extras or stay minimal. OBEY the strategy."
+    },
+    {
+      "id": "action_deploy_guide",
+      "type": "action",
+      "label": "Generate Deploy Guide",
+      "description": "Copilot generates a deployment guide shaped by the weight strategy",
+      "position": {
+        "x": 4030,
+        "y": 30
+      },
+      "actionType": "copilot_prompt",
+      "weightInfluence": [
+        {
+          "dimension": "codeDetail",
+          "direction": "accept",
+          "strength": 0.9
+        },
+        {
+          "dimension": "bestPractices",
+          "direction": "accept",
+          "strength": 1
+        },
+        {
+          "dimension": "creativity",
+          "direction": "accept",
+          "strength": 0.7
+        }
+      ],
+      "template": "Generate a deployment and publishing guide for a GitHub Copilot Extension.\n\n## Extension Details\n- **Type**: {{extType}}\n- **Name**: {{extensionName}}\n- **Language**: {{language}}\n- **Hosting**: {{hosting}}\n- **Capabilities**: {{capabilities}}\n\n## Generation Strategy (from weight analysis)\n{{weightStrategy}}\n\n## Generate:\n1. Local Development Setup (environment, dependencies, testing with Copilot, tunnel setup)\n2. Deployment to {{hosting}} (step-by-step commands, IaC, env vars)\n3. GitHub App Registration (app config, permissions, Copilot registration)\n4. Publishing Checklist (marketplace, security review, monitoring)\n\nFollow the generation strategy above precisely — it controls the level of detail and hardening.",
+      "systemPrompt": "You are a DevOps engineer specializing in deploying GitHub Copilot Extensions. Provide precise, copy-pasteable commands.\n\nCRITICAL: Follow the Generation Strategy section in the prompt EXACTLY. It contains specific instructions derived from the user's weight settings. The strategy controls whether you provide exact commands or high-level steps, whether you add production hardening or skip it, whether you suggest CI/CD extras or deploy minimally. OBEY the strategy."
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "input_ext_type",
+      "target": "input_name",
+      "label": ""
+    },
+    {
+      "id": "e2",
+      "source": "input_name",
+      "target": "input_purpose",
+      "label": ""
+    },
+    {
+      "id": "e3",
+      "source": "input_purpose",
+      "target": "input_capabilities",
+      "label": ""
+    },
+    {
+      "id": "e4",
+      "source": "input_capabilities",
+      "target": "assumption_tests",
+      "label": ""
+    },
+    {
+      "id": "e5",
+      "source": "assumption_tests",
+      "target": "input_language",
+      "label": ""
+    },
+    {
+      "id": "e6",
+      "source": "input_language",
+      "target": "decision_needs_hosting",
+      "label": ""
+    },
+    {
+      "id": "e7_yes",
+      "source": "decision_needs_hosting",
+      "target": "input_hosting",
+      "label": "yes"
+    },
+    {
+      "id": "e7_no",
+      "source": "decision_needs_hosting",
+      "target": "action_interpret_weights",
+      "label": "no"
+    },
+    {
+      "id": "e8",
+      "source": "input_hosting",
+      "target": "action_interpret_weights",
+      "label": ""
+    },
+    {
+      "id": "e9",
+      "source": "action_interpret_weights",
+      "target": "action_scaffold",
+      "label": "Continue →"
+    },
+    {
+      "id": "e10",
+      "source": "action_scaffold",
+      "target": "action_deploy_guide",
+      "label": "Continue →"
+    }
+  ],
+  "customLayout": false
+}

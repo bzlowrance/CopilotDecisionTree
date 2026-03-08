@@ -1,0 +1,943 @@
+{
+  "id": "automotive-diagnosis",
+  "name": "Automotive Systems Diagnosis",
+  "description": "Comprehensive vehicle diagnostics covering CAN bus troubleshooting, engine, transmission, electrical, braking, HVAC, and suspension systems — with image upload support for waveforms and oscilloscope captures",
+  "version": "1.0.0",
+  "rootNodeId": "input_primary_symptom",
+  "tags": [
+    "automotive",
+    "diagnosis",
+    "CAN-bus",
+    "OBD-II",
+    "waveforms",
+    "electrical",
+    "engine",
+    "transmission",
+    "braking",
+    "HVAC"
+  ],
+  "createdAt": "2026-03-05T00:00:00Z",
+  "updatedAt": "2026-03-08T04:54:09.514Z",
+  "defaultWeights": [
+    {
+      "id": "safetyPriority",
+      "label": "Safety Priority",
+      "description": "How heavily safety concerns drive the diagnosis path — high value prioritizes brake/steering/airbag checks first",
+      "value": 80,
+      "color": "#FF4444",
+      "icon": "🛡️"
+    },
+    {
+      "id": "repairCost",
+      "label": "Repair Cost Sensitivity",
+      "description": "Preference for cost-effective repairs — high tries cheaper fixes first, low goes straight to root cause",
+      "value": 50,
+      "color": "#4ECDC4",
+      "icon": "💰"
+    },
+    {
+      "id": "diagnosticDepth",
+      "label": "Diagnostic Depth",
+      "description": "How deep to drill into sub-systems — high runs exhaustive tests, low stops at first likely cause",
+      "value": 65,
+      "color": "#45B7D1",
+      "icon": "🔬"
+    },
+    {
+      "id": "timeUrgency",
+      "label": "Time Urgency",
+      "description": "Customer waiting vs scheduled service — high shortens diagnosis, low allows thorough investigation",
+      "value": 40,
+      "color": "#FFEAA7",
+      "icon": "⏱️"
+    },
+    {
+      "id": "oemCompliance",
+      "label": "OEM Compliance",
+      "description": "Stick to manufacturer procedures vs field experience — high follows TSBs strictly, low uses tech judgment",
+      "value": 60,
+      "color": "#DDA0DD",
+      "icon": "📋"
+    },
+    {
+      "id": "toolAvailability",
+      "label": "Tool Availability",
+      "description": "Assumes advanced scan tools / oscilloscopes are available — low uses basic multimeter-level diagnostics",
+      "value": 70,
+      "color": "#87CEEB",
+      "icon": "🔧"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "input_primary_symptom",
+      "type": "input",
+      "label": "Primary Symptom Category",
+      "description": "Select the main area of concern",
+      "position": {
+        "x": 30,
+        "y": 2280
+      },
+      "prompt": "What is the primary symptom or system with an issue?",
+      "variableName": "primarySymptom",
+      "inputType": "choice",
+      "choices": [
+        "Engine — misfire, stall, no start, performance loss",
+        "Transmission — shifting issues, slipping, noise",
+        "CAN Bus / Network — multiple DTCs, communication errors, modules offline",
+        "Electrical — battery drain, no-crank, lighting faults",
+        "Braking — ABS light, soft pedal, noise, pulling",
+        "HVAC — no heat, no AC, blower issues, odor",
+        "Suspension & Steering — noise, vibration, handling drift"
+      ]
+    },
+    {
+      "id": "input_vehicle_info",
+      "type": "input",
+      "label": "Vehicle Information",
+      "description": "Year, make, model and mileage",
+      "position": {
+        "x": 350,
+        "y": 2280
+      },
+      "prompt": "Enter the vehicle year, make, model, and mileage (e.g. '2019 Ford F-150 85k mi')",
+      "variableName": "vehicleInfo",
+      "inputType": "text"
+    },
+    {
+      "id": "input_obd_codes",
+      "type": "input",
+      "label": "OBD-II Codes",
+      "description": "Any stored or pending DTCs",
+      "position": {
+        "x": 670,
+        "y": 2280
+      },
+      "prompt": "Enter any OBD-II diagnostic trouble codes (e.g. P0300, U0100, C0035). Type 'none' if no codes.",
+      "variableName": "obdCodes",
+      "inputType": "text"
+    },
+    {
+      "id": "input_scan_screenshot",
+      "type": "input",
+      "label": "Scan Tool Screenshot",
+      "description": "Upload a screenshot from your scan tool showing freeze frame or DTC list",
+      "position": {
+        "x": 990,
+        "y": 2280
+      },
+      "prompt": "Upload a scan tool screenshot showing the DTC list or freeze frame data (optional — type 'skip' to continue without image)",
+      "variableName": "scanScreenshot",
+      "inputType": "image"
+    },
+    {
+      "id": "assumption_recent_service",
+      "type": "assumption",
+      "label": "Recent Service History",
+      "description": "Assumes the vehicle had recent service that may relate to the fault",
+      "position": {
+        "x": 1310,
+        "y": 2280
+      },
+      "assumption": "The vehicle has had service or repairs within the last 30 days. Recent work (oil change, brake job, part replacement) should be ruled out as a contributing factor before deeper diagnosis.",
+      "variableName": "recentService",
+      "default": true,
+      "weightInfluence": [
+        {
+          "dimension": "timeUrgency",
+          "direction": "accept",
+          "strength": 0.6
+        },
+        {
+          "dimension": "diagnosticDepth",
+          "direction": "reject",
+          "strength": 0.4
+        }
+      ]
+    },
+    {
+      "id": "assumption_aftermarket",
+      "type": "assumption",
+      "label": "Aftermarket Modifications",
+      "description": "Assumes aftermarket parts or modifications may be present",
+      "position": {
+        "x": 1630,
+        "y": 2280
+      },
+      "assumption": "The vehicle may have aftermarket modifications (tuner, exhaust, lift kit, stereo, LED lights) that could introduce electrical noise or mechanical interference.",
+      "variableName": "aftermarketMods",
+      "default": false,
+      "weightInfluence": [
+        {
+          "dimension": "oemCompliance",
+          "direction": "reject",
+          "strength": 0.7
+        },
+        {
+          "dimension": "diagnosticDepth",
+          "direction": "accept",
+          "strength": 0.5
+        }
+      ]
+    },
+    {
+      "id": "decision_system_route",
+      "type": "decision",
+      "label": "System Routing",
+      "description": "Route to the appropriate diagnostic sub-tree based on the primary symptom",
+      "position": {
+        "x": 1950,
+        "y": 2280
+      },
+      "condition": "Route to correct system diagnosis based on selected symptom category",
+      "evaluateExpression": "{{primarySymptom}}",
+      "weightBias": [
+        {
+          "dimension": "safetyPriority",
+          "favorsBranch": "Braking",
+          "strength": 0.9
+        },
+        {
+          "dimension": "diagnosticDepth",
+          "favorsBranch": "CAN Bus",
+          "strength": 0.6
+        },
+        {
+          "dimension": "repairCost",
+          "favorsBranch": "Electrical",
+          "strength": 0.4
+        }
+      ]
+    },
+    {
+      "id": "decision_engine_type",
+      "type": "decision",
+      "label": "Engine Fault Classification",
+      "description": "Classify the engine fault as mechanical, electronic/sensor, or fuel/air",
+      "position": {
+        "x": 2270,
+        "y": 255
+      },
+      "condition": "Is the engine issue mechanical (noise, vibration), electronic/sensor (misfire, CEL), or fuel/air related (stall, lean/rich)?",
+      "evaluateExpression": "{{primarySymptom}} {{obdCodes}}",
+      "weightBias": [
+        {
+          "dimension": "safetyPriority",
+          "favorsBranch": "Mechanical",
+          "strength": 0.7
+        },
+        {
+          "dimension": "toolAvailability",
+          "favorsBranch": "Electronic",
+          "strength": 0.5
+        },
+        {
+          "dimension": "repairCost",
+          "favorsBranch": "Fuel / Air",
+          "strength": 0.4
+        }
+      ]
+    },
+    {
+      "id": "input_engine_waveform",
+      "type": "input",
+      "label": "Engine Sensor Waveform",
+      "description": "Upload oscilloscope waveform of CKP/CMP sensor, injector, or ignition coil",
+      "position": {
+        "x": 2590,
+        "y": 30
+      },
+      "prompt": "Upload an oscilloscope waveform capture (CKP sensor, ignition coil primary/secondary, or injector pattern). Type 'skip' if unavailable.",
+      "variableName": "engineWaveform",
+      "inputType": "image"
+    },
+    {
+      "id": "action_engine_mechanical",
+      "type": "action",
+      "label": "Engine Mechanical Diagnosis",
+      "description": "Copilot analyzes mechanical engine symptoms",
+      "position": {
+        "x": 2590,
+        "y": 255
+      },
+      "actionType": "copilot_prompt",
+      "template": "Vehicle: {{vehicleInfo}}\nOBD Codes: {{obdCodes}}\nSymptom: {{primarySymptom}}\nRecent Service: {{recentService}}\nAftermarket Mods: {{aftermarketMods}}\n\nProvide a mechanical engine diagnosis procedure including:\n1. Compression test procedure and expected values\n2. Leak-down test if compression is low\n3. Timing chain/belt inspection procedure\n4. Bearing noise isolation technique\n5. Oil pressure test procedure and spec",
+      "systemPrompt": "You are an ASE Master Technician specializing in engine mechanical diagnosis. Provide step-by-step procedures with torque specs, expected readings, and common failure modes for the specific vehicle. Reference TSBs when applicable. Always recommend checking for recent service errors first."
+    },
+    {
+      "id": "action_engine_electronic",
+      "type": "action",
+      "label": "Engine Electronic / Sensor Diagnosis",
+      "description": "Copilot analyzes sensor waveforms and electronic faults",
+      "position": {
+        "x": 2910,
+        "y": 30
+      },
+      "actionType": "copilot_prompt",
+      "template": "Vehicle: {{vehicleInfo}}\nOBD Codes: {{obdCodes}}\nSymptom: {{primarySymptom}}\nWaveform uploaded: {{engineWaveform}}\n\nAnalyze the engine sensor / electronic fault:\n1. Interpret the uploaded waveform pattern (if provided)\n2. Expected CKP/CMP waveform patterns for this vehicle\n3. Ignition coil primary circuit expected voltage patterns: 12V supply → 300-400V inductive kick\n4. Injector pulse-width analysis at idle vs. loaded\n5. Sensor reference voltage checks (5V ref, ground integrity)\n6. PCM driver circuit tests",
+      "systemPrompt": "You are an ASE Master Technician with advanced oscilloscope and scan tool expertise. When a waveform image is provided, describe what a healthy vs. faulty pattern looks like for that sensor type. Provide specific voltage values, timing relationships, and known failure patterns for the given vehicle make/model."
+    },
+    {
+      "id": "action_engine_fuel_air",
+      "type": "action",
+      "label": "Engine Fuel / Air System Diagnosis",
+      "description": "Copilot guides fuel and air system troubleshooting",
+      "position": {
+        "x": 2590,
+        "y": 480
+      },
+      "actionType": "copilot_prompt",
+      "template": "Vehicle: {{vehicleInfo}}\nOBD Codes: {{obdCodes}}\nSymptom: {{primarySymptom}}\n\nDiagnose fuel/air system issues:\n1. Fuel pressure test — key-on engine-off (KOEO) and running pressure\n2. Fuel trim analysis (STFT/LTFT interpretation)\n3. MAF/MAP sensor validation\n4. Vacuum leak detection procedure (smoke test)\n5. Throttle body and IAC valve inspection\n6. EVAP system check if purge-related codes present",
+      "systemPrompt": "You are an ASE Master Technician specializing in fuel system and drivability diagnostics. Provide fuel pressure specs for the specific vehicle, explain fuel trim interpretation (±5% normal, >10% investigate), and list common failure points for the platform."
+    },
+    {
+      "id": "decision_canbus_speed",
+      "type": "decision",
+      "label": "CAN Bus Speed Classification",
+      "description": "Determine if the CAN bus fault is on high-speed or low-speed network",
+      "position": {
+        "x": 2270,
+        "y": 930
+      },
+      "condition": "Are the communication codes (U-codes) related to high-speed CAN (powertrain: PCM, TCM, ABS) or low-speed CAN (body: BCM, HVAC, seats)?",
+      "evaluateExpression": "{{obdCodes}} {{primarySymptom}}",
+      "weightBias": [
+        {
+          "dimension": "safetyPriority",
+          "favorsBranch": "High-Speed CAN",
+          "strength": 0.8
+        },
+        {
+          "dimension": "diagnosticDepth",
+          "favorsBranch": "Both Networks",
+          "strength": 0.7
+        },
+        {
+          "dimension": "toolAvailability",
+          "favorsBranch": "High-Speed CAN",
+          "strength": 0.5
+        }
+      ]
+    },
+    {
+      "id": "input_canbus_waveform",
+      "type": "input",
+      "label": "CAN Bus Waveform Capture",
+      "description": "Upload oscilloscope capture of CAN-H and CAN-L signals",
+      "position": {
+        "x": 2590,
+        "y": 705
+      },
+      "prompt": "Upload an oscilloscope waveform of the CAN bus lines (CAN-H and CAN-L). Ideal: dual-channel showing both lines simultaneously. Type 'skip' if unavailable.",
+      "variableName": "canbusWaveform",
+      "inputType": "image"
+    },
+    {
+      "id": "action_canbus_highspeed",
+      "type": "action",
+      "label": "High-Speed CAN Bus Diagnosis",
+      "description": "Copilot guides HS-CAN troubleshooting with waveform analysis",
+      "position": {
+        "x": 2910,
+        "y": 705
+      },
+      "actionType": "copilot_prompt",
+      "template": "Vehicle: {{vehicleInfo}}\nOBD Codes: {{obdCodes}}\nCAN Waveform uploaded: {{canbusWaveform}}\n\nDiagnose High-Speed CAN bus issues:\n1. Expected HS-CAN waveform: CAN-H 2.5→3.5V, CAN-L 2.5→1.5V (differential ~2V)\n2. Bus termination resistance check: should measure ~60Ω between CAN-H and CAN-L (two 120Ω resistors in parallel)\n3. Module-by-module isolation procedure (unplug one at a time, check bus recovery)\n4. Common HS-CAN failure modes: shorted module, corroded connector, chafed wiring harness\n5. Interpret the uploaded waveform — identify stuck dominant, stuck recessive, noise, or ringing\n6. DLC pin identification: Pin 6 = CAN-H, Pin 14 = CAN-L",
+      "systemPrompt": "You are a CAN bus and automotive network specialist. When analyzing waveform images, describe the expected 2.5V recessive / differential dominant pattern. Identify common faults: stuck-dominant (shorted module), stuck-recessive (open bus), ringing (missing termination), noise (ground offset). Provide the half-split isolation method for finding the offending module. Reference the specific vehicle's module topology if identifiable."
+    },
+    {
+      "id": "action_canbus_lowspeed",
+      "type": "action",
+      "label": "Low-Speed CAN / LIN Bus Diagnosis",
+      "description": "Copilot guides LS-CAN and LIN bus troubleshooting",
+      "position": {
+        "x": 2590,
+        "y": 930
+      },
+      "actionType": "copilot_prompt",
+      "template": "Vehicle: {{vehicleInfo}}\nOBD Codes: {{obdCodes}}\nCAN Waveform uploaded: {{canbusWaveform}}\n\nDiagnose Low-Speed CAN / LIN bus issues:\n1. Expected LS-CAN single-wire waveform (0V recessive, ~5V dominant on some platforms, or fault-tolerant CAN at ~2.2V / ~2.8V)\n2. LIN bus single-master protocol: ~12V recessive, ~0V dominant, 19.2 kbaud typical\n3. Gateway module function and how LS-CAN connects to HS-CAN\n4. Common body module failures: BCM, seat module, mirror module, HVAC control\n5. Parasitic draw relationship — LS-CAN module staying awake causes battery drain",
+      "systemPrompt": "You are an automotive body electronics and network specialist. Explain fault-tolerant CAN (single-wire fallback), LIN bus master/slave architecture, and gateway module bridging. Focus on parasitic draw diagnosis when LS-CAN modules fail to enter sleep mode."
+    },
+    {
+      "id": "action_canbus_both",
+      "type": "action",
+      "label": "Full Network Diagnosis",
+      "description": "Copilot runs comprehensive multi-bus network analysis",
+      "position": {
+        "x": 2590,
+        "y": 1155
+      },
+      "actionType": "copilot_prompt",
+      "template": "Vehicle: {{vehicleInfo}}\nOBD Codes: {{obdCodes}}\nCAN Waveform uploaded: {{canbusWaveform}}\nScan Screenshot: {{scanScreenshot}}\n\nPerform full CAN/LIN network diagnosis:\n1. Identify all U-codes and map them to specific buses (HS-CAN, MS-CAN, LS-CAN, LIN)\n2. Gateway module health check\n3. Power and ground integrity at DLC and major module connectors\n4. Bus topology map for this vehicle platform\n5. Step-by-step half-split isolation procedure\n6. Check for aftermarket devices on the OBD-II port that may disrupt bus communication",
+      "systemPrompt": "You are a master-level automotive network diagnostician. Provide a systematic approach to multi-bus faults. Explain how gateway modules route messages between buses and how a single failed module can cascade U-codes across the entire network. When waveform images are provided, compare against expected CAN bus signal specifications."
+    },
+    {
+      "id": "decision_electrical_type",
+      "type": "decision",
+      "label": "Electrical Fault Classification",
+      "description": "Classify as starting/charging, parasitic drain, or lighting/accessory",
+      "position": {
+        "x": 2270,
+        "y": 1605
+      },
+      "condition": "Is the electrical fault related to starting/charging, parasitic battery drain, or lighting/accessory circuits?",
+      "evaluateExpression": "{{primarySymptom}} {{obdCodes}}",
+      "weightBias": [
+        {
+          "dimension": "safetyPriority",
+          "favorsBranch": "Starting / Charging",
+          "strength": 0.6
+        },
+        {
+          "dimension": "timeUrgency",
+          "favorsBranch": "Starting / Charging",
+          "strength": 0.7
+        },
+        {
+          "dimension": "diagnosticDepth",
+          "favorsBranch": "Parasitic Drain",
+          "strength": 0.8
+        }
+      ]
+    },
+    {
+      "id": "input_electrical_waveform",
+      "type": "input",
+      "label": "Electrical System Waveform",
+      "description": "Upload alternator ripple, starter current draw, or parasitic draw measurement",
+      "position": {
+        "x": 2590,
+        "y": 1380
+      },
+      "prompt": "Upload a waveform or measurement image (alternator AC ripple, starter current draw pattern, or milliamp clamp reading for parasitic draw). Type 'skip' if unavailable.",
+      "variableName": "electricalWaveform",
+      "inputType": "image"
+    },
+    {
+      "id": "action_starting_charging",
+      "type": "action",
+      "label": "Starting & Charging Diagnosis",
+      "description": "Copilot guides starting and charging system tests",
+      "position": {
+        "x": 2910,
+        "y": 1380
+      },
+      "actionType": "copilot_prompt",
+      "template": "Vehicle: {{vehicleInfo}}\nOBD Codes: {{obdCodes}}\nElectrical Waveform: {{electricalWaveform}}\n\nDiagnose starting and charging system:\n1. Battery test: CCA rating vs measured, state of charge, internal resistance\n2. Starter current draw test: typical 150-250A for 4-cyl, 200-350A for V8\n3. Cranking voltage drop test: battery terminal → starter (should be <0.5V)\n4. Alternator output test: 13.8-14.4V at idle, AC ripple <0.5V peak-to-peak\n5. Alternator diode pattern — analyze the uploaded waveform for open/shorted diodes\n6. Ground integrity tests at engine-to-body and battery-to-body straps",
+      "systemPrompt": "You are an automotive electrical systems specialist. Provide specific cranking amperage specs for the identified vehicle. Explain how to read an alternator AC ripple pattern to identify diode failures (3-phase rectification). When a waveform image is provided, describe what healthy vs. faulty alternator output looks like."
+    },
+    {
+      "id": "action_parasitic_drain",
+      "type": "action",
+      "label": "Parasitic Battery Drain Diagnosis",
+      "description": "Copilot guides systematic parasitic draw testing",
+      "position": {
+        "x": 2590,
+        "y": 1605
+      },
+      "actionType": "copilot_prompt",
+      "template": "Vehicle: {{vehicleInfo}}\nOBD Codes: {{obdCodes}}\nDraw Measurement: {{electricalWaveform}}\n\nDiagnose parasitic battery drain:\n1. Acceptable draw: typically <50mA after modules sleep (30-60 min timeout)\n2. Milliamp clamp method vs fuse-pull method\n3. Module sleep timer procedure — close all doors, wait for BCM/GEM timeout\n4. Fuse-by-fuse isolation: pull fuses one at a time while monitoring current\n5. Common culprits: aftermarket radio, OBD-II dongle, trunk light, seat module, Bluetooth module\n6. Current waveform interpretation: periodic wake-up spikes are normal (network management), constant >80mA is abnormal",
+      "systemPrompt": "You are an automotive electrical diagnostic specialist focusing on parasitic draw issues. Explain the module sleep/wake-up cycle, network management messages, and how to use a current clamp or ammeter to isolate the circuit. Reference common platform-specific issues like Ford BCM wake-up problems or GM RAP module timeouts."
+    },
+    {
+      "id": "action_electrical_accessory",
+      "type": "action",
+      "label": "Lighting & Accessory Circuit Diagnosis",
+      "description": "Copilot guides accessory and lighting circuit troubleshooting",
+      "position": {
+        "x": 2590,
+        "y": 1830
+      },
+      "actionType": "copilot_prompt",
+      "template": "Vehicle: {{vehicleInfo}}\nOBD Codes: {{obdCodes}}\nSymptom: {{primarySymptom}}\n\nDiagnose lighting and accessory circuit faults:\n1. Power distribution diagram approach — trace from fuse box to load\n2. Voltage drop testing: supply side and ground side (<0.1V per connection)\n3. Relay testing: coil resistance, contact resistance, click test\n4. BCM-controlled lighting: verify BCM commands via scan tool\n5. LED and HID headlight module diagnostics\n6. Multifunction switch and combination switch testing",
+      "systemPrompt": "You are an automotive electrical technician experienced with body control module diagnostics and wiring harness troubleshooting. Provide systematic voltage-drop testing procedures, explain smart junction box (SJB) / BCM controlled circuits, and guide through wiring diagram interpretation."
+    },
+    {
+      "id": "decision_transmission_type",
+      "type": "decision",
+      "label": "Transmission Issue Type",
+      "description": "Automatic shift quality, manual clutch, or CVT issues",
+      "position": {
+        "x": 2270,
+        "y": 2280
+      },
+      "condition": "Is the transmission issue related to automatic shift quality/engagement, manual clutch/synchro, or CVT belt/pulley?",
+      "evaluateExpression": "{{primarySymptom}} {{obdCodes}}",
+      "weightBias": [
+        {
+          "dimension": "safetyPriority",
+          "favorsBranch": "Automatic",
+          "strength": 0.5
+        },
+        {
+          "dimension": "repairCost",
+          "favorsBranch": "Automatic",
+          "strength": 0.6
+        },
+        {
+          "dimension": "oemCompliance",
+          "favorsBranch": "CVT",
+          "strength": 0.7
+        }
+      ]
+    },
+    {
+      "id": "action_transmission_auto",
+      "type": "action",
+      "label": "Automatic Transmission Diagnosis",
+      "description": "Copilot guides automatic transmission diagnostics",
+      "position": {
+        "x": 2590,
+        "y": 2055
+      },
+      "actionType": "copilot_prompt",
+      "template": "Vehicle: {{vehicleInfo}}\nOBD Codes: {{obdCodes}}\nSymptom: {{primarySymptom}}\n\nDiagnose automatic transmission issues:\n1. Fluid condition check: color, smell, level (hot/cold markings)\n2. Line pressure test and expected values for this transmission\n3. Shift solenoid resistance and function tests\n4. TCC (torque converter clutch) operation and shudder diagnosis\n5. Adaptive shift learning reset procedure\n6. TCM live data: turbine speed vs output speed, slip detection\n7. Common failure modes for this specific transmission model",
+      "systemPrompt": "You are a transmission specialist with expertise in modern automatic transmissions (8-10 speed, dual-clutch, planetary). Provide specific fluid specs (ATF type), expected line pressures, solenoid resistance values, and known issues for the vehicle's specific transmission model (e.g., GM 8L90, Ford 10R80, ZF 8HP)."
+    },
+    {
+      "id": "action_transmission_manual",
+      "type": "action",
+      "label": "Manual Transmission / Clutch Diagnosis",
+      "description": "Copilot guides manual transmission and clutch diagnostics",
+      "position": {
+        "x": 2590,
+        "y": 2280
+      },
+      "actionType": "copilot_prompt",
+      "template": "Vehicle: {{vehicleInfo}}\nOBD Codes: {{obdCodes}}\nSymptom: {{primarySymptom}}\n\nDiagnose manual transmission / clutch issues:\n1. Clutch pedal feel and engagement point assessment\n2. Hydraulic clutch: master cylinder and slave cylinder inspection, fluid check\n3. Synchro ring wear test: double-clutch vs difficult engagement\n4. Input shaft bearing noise: goes away when clutch is depressed\n5. Shift linkage adjustment and cable inspection\n6. Flywheel inspection: dual-mass flywheel (DMF) rattle test",
+      "systemPrompt": "You are a drivetrain specialist. Provide clutch disc wear indicators, hydraulic system bleeding procedures, and DMF failure symptoms for the specific vehicle. Include flywheel resurfacing limits and when replacement is required."
+    },
+    {
+      "id": "action_transmission_cvt",
+      "type": "action",
+      "label": "CVT Transmission Diagnosis",
+      "description": "Copilot guides CVT-specific diagnostics",
+      "position": {
+        "x": 2590,
+        "y": 2505
+      },
+      "actionType": "copilot_prompt",
+      "template": "Vehicle: {{vehicleInfo}}\nOBD Codes: {{obdCodes}}\nSymptom: {{primarySymptom}}\n\nDiagnose CVT issues:\n1. CVT fluid condition and level check (specific CVT fluid required — never use ATF)\n2. Belt/chain slip detection: RPM flare without corresponding speed increase\n3. Pulley wear inspection procedure\n4. CVT line pressure test\n5. TCM calibration update / reprogram check\n6. Known CVT TSBs and recalls for this vehicle\n7. Judder / shudder at low speed: fluid degradation vs. belt wear",
+      "systemPrompt": "You are a CVT specialist familiar with Nissan Jatco, Subaru Lineartronic, Honda, and Toyota CVT units. Provide the correct CVT fluid specification (e.g., NS-3, CVTF), known chain/belt life expectations, and OEM-recommended service intervals. Explain the difference between a CVT shudder (fix with fluid change) vs. belt slip (internal repair needed)."
+    },
+    {
+      "id": "decision_brake_type",
+      "type": "decision",
+      "label": "Brake Issue Classification",
+      "description": "ABS/ESC electronic, hydraulic, or mechanical brake issue",
+      "position": {
+        "x": 2270,
+        "y": 2955
+      },
+      "condition": "Is the brake issue electronic (ABS/ESC warning light, wheel speed sensor), hydraulic (soft pedal, fluid leak), or mechanical (noise, vibration, pull)?",
+      "evaluateExpression": "{{primarySymptom}} {{obdCodes}}",
+      "weightBias": [
+        {
+          "dimension": "safetyPriority",
+          "favorsBranch": "Hydraulic",
+          "strength": 0.95
+        },
+        {
+          "dimension": "toolAvailability",
+          "favorsBranch": "Electronic ABS/ESC",
+          "strength": 0.6
+        },
+        {
+          "dimension": "repairCost",
+          "favorsBranch": "Mechanical",
+          "strength": 0.5
+        }
+      ]
+    },
+    {
+      "id": "action_brake_electronic",
+      "type": "action",
+      "label": "ABS / ESC Electronic Diagnosis",
+      "description": "Copilot guides ABS and stability control diagnosis",
+      "position": {
+        "x": 2590,
+        "y": 2730
+      },
+      "actionType": "copilot_prompt",
+      "template": "Vehicle: {{vehicleInfo}}\nOBD Codes: {{obdCodes}}\nSymptom: {{primarySymptom}}\n\nDiagnose ABS/ESC electronic faults:\n1. Wheel speed sensor testing: AC voltage output at low speed, expected 0.2-2.0V AC depending on speed\n2. Sensor air gap inspection and tone ring condition\n3. ABS module communication check\n4. Steering angle sensor calibration procedure\n5. Yaw rate sensor and lateral acceleration sensor checks\n6. ABS pump motor relay and fuse verification\n7. Brake light switch input to ABS module",
+      "systemPrompt": "You are a brake and chassis electronics specialist. Provide wheel speed sensor resistance specs (typically 800-2000Ω for passive, or 5V/12V for active), tone ring tooth count for the specific vehicle, and ABS module initialization procedures. Reference platform-specific issues (e.g., GM EBCM failures, Ford HCU leaks)."
+    },
+    {
+      "id": "action_brake_hydraulic",
+      "type": "action",
+      "label": "Brake Hydraulic Diagnosis",
+      "description": "Copilot guides hydraulic brake system troubleshooting",
+      "position": {
+        "x": 2590,
+        "y": 2955
+      },
+      "actionType": "copilot_prompt",
+      "template": "Vehicle: {{vehicleInfo}}\nOBD Codes: {{obdCodes}}\nSymptom: {{primarySymptom}}\n\nDiagnose brake hydraulic issues:\n1. Master cylinder bench bleed and push-rod adjustment\n2. Brake line and hose inspection for leaks, cracks, bulging\n3. Brake fluid condition: moisture content, DOT spec, color\n4. Caliper slide pin inspection and lubrication\n5. Brake booster vacuum/electric assist test\n6. Pedal feel diagnosis: spongy (air in lines), hard (booster failure), sinks to floor (internal MC bypass)\n7. ABS hydraulic modulator bleed procedure",
+      "systemPrompt": "You are a master brake technician. Provide specific brake fluid specs (DOT 3/4/5.1), master cylinder bore sizes for the vehicle, and vacuum booster check valve test procedures. Explain electric brake boost systems (iBooster, e-Brake) for modern vehicles."
+    },
+    {
+      "id": "action_brake_mechanical",
+      "type": "action",
+      "label": "Brake Mechanical Diagnosis",
+      "description": "Copilot guides mechanical brake component troubleshooting",
+      "position": {
+        "x": 2590,
+        "y": 3180
+      },
+      "actionType": "copilot_prompt",
+      "template": "Vehicle: {{vehicleInfo}}\nOBD Codes: {{obdCodes}}\nSymptom: {{primarySymptom}}\n\nDiagnose mechanical brake issues:\n1. Pad and rotor measurement: minimum thickness specs for this vehicle\n2. Rotor lateral runout measurement (max typically 0.002\")\n3. Brake noise diagnosis: squeal (glazing/vibration), grinding (metal-to-metal), clunk (loose caliper)\n4. Brake pull diagnosis: caliper piston retraction, hose restriction (infrared temp comparison)\n5. Parking brake adjustment and cable inspection\n6. Brake drum: shoe measurement, drum max diameter, self-adjuster function",
+      "systemPrompt": "You are a brake service specialist. Provide minimum pad thickness (typically 2-3mm), minimum rotor thickness for the specific vehicle, and torque specs for caliper bracket bolts and lug nuts. Include break-in/bedding procedure for new pads and rotors."
+    },
+    {
+      "id": "decision_hvac_type",
+      "type": "decision",
+      "label": "HVAC Issue Classification",
+      "description": "AC refrigerant, heating, blower/airflow, or control/actuator issue",
+      "position": {
+        "x": 2270,
+        "y": 3630
+      },
+      "condition": "Is the HVAC issue related to AC cooling (no cold air, intermittent), heating (no heat, low heat), or airflow control (blend door, blower motor)?",
+      "evaluateExpression": "{{primarySymptom}}",
+      "weightBias": [
+        {
+          "dimension": "timeUrgency",
+          "favorsBranch": "A/C Refrigerant",
+          "strength": 0.5
+        },
+        {
+          "dimension": "repairCost",
+          "favorsBranch": "Airflow Control",
+          "strength": 0.6
+        },
+        {
+          "dimension": "toolAvailability",
+          "favorsBranch": "A/C Refrigerant",
+          "strength": 0.7
+        }
+      ]
+    },
+    {
+      "id": "action_hvac_ac",
+      "type": "action",
+      "label": "A/C System Diagnosis",
+      "description": "Copilot guides AC refrigerant system troubleshooting",
+      "position": {
+        "x": 2590,
+        "y": 3405
+      },
+      "actionType": "copilot_prompt",
+      "template": "Vehicle: {{vehicleInfo}}\nOBD Codes: {{obdCodes}}\nSymptom: {{primarySymptom}}\n\nDiagnose A/C refrigerant system:\n1. Gauge reading interpretation: high-side and low-side expected pressures for R-134a / R-1234yf\n2. Compressor clutch engagement test (or variable displacement compressor operation)\n3. Condenser fan operation verification\n4. Expansion valve / orifice tube symptoms\n5. UV dye leak detection procedure\n6. Refrigerant charge weight for this vehicle\n7. Compressor oil quantity and type",
+      "systemPrompt": "You are an HVAC technician certified in R-134a and R-1234yf systems. Provide ambient-to-pressure charts, compressor clutch gap specs, and refrigerant capacity for the specific vehicle. Explain dual-zone vs. single-zone system differences and rear AC considerations for SUVs/vans."
+    },
+    {
+      "id": "action_hvac_heat",
+      "type": "action",
+      "label": "Heating System Diagnosis",
+      "description": "Copilot guides heating system troubleshooting",
+      "position": {
+        "x": 2590,
+        "y": 3630
+      },
+      "actionType": "copilot_prompt",
+      "template": "Vehicle: {{vehicleInfo}}\nOBD Codes: {{obdCodes}}\nSymptom: {{primarySymptom}}\n\nDiagnose heating system:\n1. Coolant level and condition check\n2. Heater hose temperature comparison (inlet vs outlet — both should be hot)\n3. Thermostat operation test (opens at rated temperature, typically 195°F)\n4. Heater core flow test and flush procedure\n5. Blend door actuator operation (listen for clicks, check with scan tool)\n6. Coolant flow restriction diagnosis\n7. Auxiliary coolant pump (if equipped, common on turbocharged and electric vehicles)",
+      "systemPrompt": "You are an HVAC specialist. Provide thermostat temperature ratings for the specific vehicle, heater core flush procedures, and blend door actuator calibration steps. Address common issues like air pockets after coolant service causing no-heat conditions."
+    },
+    {
+      "id": "action_hvac_airflow",
+      "type": "action",
+      "label": "Airflow & Actuator Diagnosis",
+      "description": "Copilot guides blower motor and blend door troubleshooting",
+      "position": {
+        "x": 2590,
+        "y": 3855
+      },
+      "actionType": "copilot_prompt",
+      "template": "Vehicle: {{vehicleInfo}}\nOBD Codes: {{obdCodes}}\nSymptom: {{primarySymptom}}\n\nDiagnose HVAC airflow and actuator issues:\n1. Blower motor: test with direct 12V, check resistor/module, speed control module\n2. Blower motor resistor testing: typical resistance values per speed position\n3. Blend door actuator: motor test, position feedback, calibration procedure\n4. Mode door actuator: verify defrost/floor/panel door movement\n5. Recirculation door: check for cabin filter restriction\n6. Evaporator drain tube: check for blockage causing water intrusion or musty odor",
+      "systemPrompt": "You are an HVAC controls specialist. Provide blower motor current draw specs (typically 15-20A at high speed), resistor block resistance values, and the scan-tool-based actuator calibration procedure for the specific vehicle. Address common noise complaints (leaves in blower cage, worn bushings)."
+    },
+    {
+      "id": "decision_suspension_type",
+      "type": "decision",
+      "label": "Suspension Issue Classification",
+      "description": "Noise/clunk, vibration, or alignment/handling issue",
+      "position": {
+        "x": 2270,
+        "y": 4305
+      },
+      "condition": "Is the suspension issue a noise/clunk (over bumps, turning), vibration (speed-related, braking), or handling/drift (alignment, uneven tire wear)?",
+      "evaluateExpression": "{{primarySymptom}}",
+      "weightBias": [
+        {
+          "dimension": "safetyPriority",
+          "favorsBranch": "Handling / Alignment",
+          "strength": 0.7
+        },
+        {
+          "dimension": "diagnosticDepth",
+          "favorsBranch": "Noise / Clunk",
+          "strength": 0.5
+        },
+        {
+          "dimension": "repairCost",
+          "favorsBranch": "Vibration",
+          "strength": 0.4
+        }
+      ]
+    },
+    {
+      "id": "action_suspension_noise",
+      "type": "action",
+      "label": "Suspension Noise Diagnosis",
+      "description": "Copilot guides suspension noise isolation",
+      "position": {
+        "x": 2590,
+        "y": 4080
+      },
+      "actionType": "copilot_prompt",
+      "template": "Vehicle: {{vehicleInfo}}\nSymptom: {{primarySymptom}}\n\nDiagnose suspension noise:\n1. Bounce test: identify weak struts/shocks (more than 2 bounces = worn)\n2. Dry park test: turn steering lock-to-lock with vehicle stationary, listen/feel for clunks\n3. Ball joint check: loaded vs unloaded depending on spring type (SLA vs strut)\n4. Sway bar link inspection: rattle over small bumps\n5. Control arm bushing: visual inspection for cracking, chassis ear for isolation\n6. Strut mount bearing: noise when turning at slow speed\n7. Subframe and body mount bushing check",
+      "systemPrompt": "You are a suspension and steering technician. Provide specific ball joint play specifications for the vehicle, strut torque specs, and bushing inspection criteria. Explain the difference between loaded vs. unloaded ball joint testing depending on suspension geometry (SLA, MacPherson, multi-link)."
+    },
+    {
+      "id": "action_suspension_vibration",
+      "type": "action",
+      "label": "Vibration Diagnosis",
+      "description": "Copilot guides vibration diagnosis — tires, wheel balance, driveline",
+      "position": {
+        "x": 2590,
+        "y": 4305
+      },
+      "actionType": "copilot_prompt",
+      "template": "Vehicle: {{vehicleInfo}}\nSymptom: {{primarySymptom}}\n\nDiagnose vehicle vibration:\n1. Speed-related vibration chart:\n   - 25-45 mph: tire/wheel out-of-round or bent wheel\n   - 50-70 mph: wheel balance issue\n   - Any speed under acceleration: driveline (CV joint, U-joint, driveshaft)\n2. Tire inspection: cupping, flat spots, belt separation, road force balance\n3. Hub bearing inspection: play check and noise isolation (hand rotation, stethoscope)\n4. CV axle inspection: torn boot, clicking on turns\n5. Driveshaft U-joint and center bearing inspection\n6. Engine/transmission mount check: worn mounts transmit vibration to cabin",
+      "systemPrompt": "You are a drivability and NVH (noise, vibration, harshness) specialist. Provide road force balance specs, hub bearing play limits, and driveshaft angle specifications for the vehicle. Explain the first-order vs. second-order vibration relationship to isolate tire/wheel vs. driveline sources."
+    },
+    {
+      "id": "action_suspension_alignment",
+      "type": "action",
+      "label": "Alignment & Handling Diagnosis",
+      "description": "Copilot guides alignment troubleshooting and tire wear analysis",
+      "position": {
+        "x": 2590,
+        "y": 4530
+      },
+      "actionType": "copilot_prompt",
+      "template": "Vehicle: {{vehicleInfo}}\nSymptom: {{primarySymptom}}\n\nDiagnose alignment and handling issues:\n1. Tire wear pattern analysis:\n   - Inner edge: excessive negative camber or toe-out\n   - Outer edge: excessive positive camber or toe-in\n   - Center: over-inflation\n   - Both edges: under-inflation\n   - Cupping/scalloping: worn shocks or imbalance\n2. Pre-alignment inspection: check all suspension components before aligning\n3. Alignment specifications: camber, caster, toe, SAI, included angle for this vehicle\n4. Cross-camber and cross-caster limits (typically <0.5°)\n5. Pull diagnosis: brake drag vs. alignment vs. tire conicity\n6. Ride height measurement — sagging springs affect alignment geometry",
+      "systemPrompt": "You are an alignment and chassis geometry specialist. Provide the OEM alignment specifications for the specific vehicle (camber, caster, toe front and rear). Explain the relationship between caster and steering effort, cross-caster and pull, and how ride height affects camber readings. Recommend when adjustable components (cam bolts, shims) are needed."
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_symptom_to_vehicle",
+      "source": "input_primary_symptom",
+      "target": "input_vehicle_info"
+    },
+    {
+      "id": "e_vehicle_to_codes",
+      "source": "input_vehicle_info",
+      "target": "input_obd_codes"
+    },
+    {
+      "id": "e_codes_to_scan",
+      "source": "input_obd_codes",
+      "target": "input_scan_screenshot"
+    },
+    {
+      "id": "e_scan_to_service",
+      "source": "input_scan_screenshot",
+      "target": "assumption_recent_service"
+    },
+    {
+      "id": "e_service_to_mods",
+      "source": "assumption_recent_service",
+      "target": "assumption_aftermarket"
+    },
+    {
+      "id": "e_mods_to_route",
+      "source": "assumption_aftermarket",
+      "target": "decision_system_route"
+    },
+    {
+      "id": "e_route_engine",
+      "source": "decision_system_route",
+      "target": "decision_engine_type",
+      "label": "Engine"
+    },
+    {
+      "id": "e_route_transmission",
+      "source": "decision_system_route",
+      "target": "decision_transmission_type",
+      "label": "Transmission"
+    },
+    {
+      "id": "e_route_canbus",
+      "source": "decision_system_route",
+      "target": "decision_canbus_speed",
+      "label": "CAN Bus"
+    },
+    {
+      "id": "e_route_electrical",
+      "source": "decision_system_route",
+      "target": "decision_electrical_type",
+      "label": "Electrical"
+    },
+    {
+      "id": "e_route_braking",
+      "source": "decision_system_route",
+      "target": "decision_brake_type",
+      "label": "Braking"
+    },
+    {
+      "id": "e_route_hvac",
+      "source": "decision_system_route",
+      "target": "decision_hvac_type",
+      "label": "HVAC"
+    },
+    {
+      "id": "e_route_suspension",
+      "source": "decision_system_route",
+      "target": "decision_suspension_type",
+      "label": "Suspension"
+    },
+    {
+      "id": "e_engine_type_waveform",
+      "source": "decision_engine_type",
+      "target": "input_engine_waveform",
+      "label": "Electronic"
+    },
+    {
+      "id": "e_engine_waveform_action",
+      "source": "input_engine_waveform",
+      "target": "action_engine_electronic"
+    },
+    {
+      "id": "e_engine_mechanical",
+      "source": "decision_engine_type",
+      "target": "action_engine_mechanical",
+      "label": "Mechanical"
+    },
+    {
+      "id": "e_engine_fuel",
+      "source": "decision_engine_type",
+      "target": "action_engine_fuel_air",
+      "label": "Fuel / Air"
+    },
+    {
+      "id": "e_canbus_to_waveform",
+      "source": "decision_canbus_speed",
+      "target": "input_canbus_waveform",
+      "label": "High-Speed CAN"
+    },
+    {
+      "id": "e_canbus_waveform_hs",
+      "source": "input_canbus_waveform",
+      "target": "action_canbus_highspeed"
+    },
+    {
+      "id": "e_canbus_ls",
+      "source": "decision_canbus_speed",
+      "target": "action_canbus_lowspeed",
+      "label": "Low-Speed CAN"
+    },
+    {
+      "id": "e_canbus_both",
+      "source": "decision_canbus_speed",
+      "target": "action_canbus_both",
+      "label": "Both Networks"
+    },
+    {
+      "id": "e_electrical_to_waveform",
+      "source": "decision_electrical_type",
+      "target": "input_electrical_waveform",
+      "label": "Starting / Charging"
+    },
+    {
+      "id": "e_elec_waveform_start",
+      "source": "input_electrical_waveform",
+      "target": "action_starting_charging"
+    },
+    {
+      "id": "e_electrical_drain",
+      "source": "decision_electrical_type",
+      "target": "action_parasitic_drain",
+      "label": "Parasitic Drain"
+    },
+    {
+      "id": "e_electrical_accessory",
+      "source": "decision_electrical_type",
+      "target": "action_electrical_accessory",
+      "label": "Lighting / Accessory"
+    },
+    {
+      "id": "e_trans_auto",
+      "source": "decision_transmission_type",
+      "target": "action_transmission_auto",
+      "label": "Automatic"
+    },
+    {
+      "id": "e_trans_manual",
+      "source": "decision_transmission_type",
+      "target": "action_transmission_manual",
+      "label": "Manual"
+    },
+    {
+      "id": "e_trans_cvt",
+      "source": "decision_transmission_type",
+      "target": "action_transmission_cvt",
+      "label": "CVT"
+    },
+    {
+      "id": "e_brake_electronic",
+      "source": "decision_brake_type",
+      "target": "action_brake_electronic",
+      "label": "Electronic ABS/ESC"
+    },
+    {
+      "id": "e_brake_hydraulic",
+      "source": "decision_brake_type",
+      "target": "action_brake_hydraulic",
+      "label": "Hydraulic"
+    },
+    {
+      "id": "e_brake_mechanical",
+      "source": "decision_brake_type",
+      "target": "action_brake_mechanical",
+      "label": "Mechanical"
+    },
+    {
+      "id": "e_hvac_ac",
+      "source": "decision_hvac_type",
+      "target": "action_hvac_ac",
+      "label": "A/C Refrigerant"
+    },
+    {
+      "id": "e_hvac_heat",
+      "source": "decision_hvac_type",
+      "target": "action_hvac_heat",
+      "label": "Heating"
+    },
+    {
+      "id": "e_hvac_airflow",
+      "source": "decision_hvac_type",
+      "target": "action_hvac_airflow",
+      "label": "Airflow Control"
+    },
+    {
+      "id": "e_susp_noise",
+      "source": "decision_suspension_type",
+      "target": "action_suspension_noise",
+      "label": "Noise / Clunk"
+    },
+    {
+      "id": "e_susp_vibration",
+      "source": "decision_suspension_type",
+      "target": "action_suspension_vibration",
+      "label": "Vibration"
+    },
+    {
+      "id": "e_susp_alignment",
+      "source": "decision_suspension_type",
+      "target": "action_suspension_alignment",
+      "label": "Handling / Alignment"
+    }
+  ]
+}

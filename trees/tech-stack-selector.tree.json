@@ -1,0 +1,491 @@
+{
+  "id": "tech-stack-selector",
+  "name": "Tech Stack Selector",
+  "description": "Helps teams choose the right technology stack for a new project — frontend, backend, database, and infrastructure based on requirements and team expertise",
+  "version": "1.0.0",
+  "rootNodeId": "input_project_type",
+  "tags": [
+    "technology",
+    "stack",
+    "architecture",
+    "greenfield"
+  ],
+  "createdAt": "2026-03-04T00:00:00Z",
+  "updatedAt": "2026-03-08T04:49:45.812Z",
+  "defaultWeights": [
+    {
+      "id": "learningCurve",
+      "label": "Learning Curve",
+      "description": "Team ramp-up tolerance — high accepts steep learning, low picks familiar tech",
+      "value": 45,
+      "color": "#FF6B6B",
+      "icon": "📚"
+    },
+    {
+      "id": "licensingCost",
+      "label": "Licensing Cost",
+      "description": "Budget for tools and licenses — high allows paid solutions, low prefers open source",
+      "value": 50,
+      "color": "#4ECDC4",
+      "icon": "💰"
+    },
+    {
+      "id": "ecosystemMaturity",
+      "label": "Ecosystem Maturity",
+      "description": "Preference for mature ecosystems — high picks established, low tries emerging tech",
+      "value": 55,
+      "color": "#45B7D1",
+      "icon": "🌐"
+    },
+    {
+      "id": "devExperience",
+      "label": "Developer Experience",
+      "description": "Weight on DX and tooling quality — high prioritizes great DX, low accepts rough edges",
+      "value": 60,
+      "color": "#96CEB4",
+      "icon": "🧑‍💻"
+    },
+    {
+      "id": "buildSpeed",
+      "label": "Build Speed",
+      "description": "Development velocity priority — high picks fast-to-build stacks, low optimizes runtime",
+      "value": 50,
+      "color": "#FFEAA7",
+      "icon": "⚡"
+    },
+    {
+      "id": "communitySupport",
+      "label": "Community Support",
+      "description": "Importance of community and docs — high needs strong community, low accepts niche tech",
+      "value": 55,
+      "color": "#DDA0DD",
+      "icon": "👥"
+    },
+    {
+      "id": "typesSafety",
+      "label": "Type Safety",
+      "description": "Static typing preference — high demands strong types, low accepts dynamic languages",
+      "value": 65,
+      "color": "#F0E68C",
+      "icon": "🔒"
+    },
+    {
+      "id": "performanceFocus",
+      "label": "Performance Focus",
+      "description": "Runtime performance requirements — high needs low latency, low accepts interpreted languages",
+      "value": 50,
+      "color": "#87CEEB",
+      "icon": "🏎️"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "input_project_type",
+      "type": "input",
+      "label": "Project Type",
+      "description": "What kind of project are you building?",
+      "position": {
+        "x": 30,
+        "y": 712.5
+      },
+      "prompt": "What type of project are you building?",
+      "variableName": "projectType",
+      "inputType": "choice",
+      "choices": [
+        "SaaS web application",
+        "Internal tool / admin dashboard",
+        "Real-time collaborative app",
+        "E-commerce platform",
+        "API / backend service only",
+        "Mobile app with backend"
+      ]
+    },
+    {
+      "id": "input_scale",
+      "type": "input",
+      "label": "Expected Scale",
+      "description": "Anticipated user base and traffic",
+      "position": {
+        "x": 390,
+        "y": 712.5
+      },
+      "prompt": "What scale do you anticipate at peak?",
+      "variableName": "expectedScale",
+      "inputType": "choice",
+      "choices": [
+        "Small (< 1K users, < 100 RPM)",
+        "Medium (1K-100K users, 1K RPM)",
+        "Large (100K-1M users, 10K RPM)",
+        "Massive (1M+ users, 100K+ RPM)"
+      ]
+    },
+    {
+      "id": "input_team_exp",
+      "type": "input",
+      "label": "Team Expertise",
+      "description": "What does the team know best?",
+      "position": {
+        "x": 750,
+        "y": 712.5
+      },
+      "prompt": "What is the team's strongest area of expertise?",
+      "variableName": "teamExpertise",
+      "inputType": "choice",
+      "choices": [
+        "JavaScript / TypeScript ecosystem",
+        ".NET / C# ecosystem",
+        "Python ecosystem",
+        "Java / Kotlin / JVM ecosystem",
+        "Go / Rust systems programming",
+        "Mixed / no strong preference"
+      ]
+    },
+    {
+      "id": "input_data_model",
+      "type": "input",
+      "label": "Data Characteristics",
+      "description": "What kind of data does the app primarily work with?",
+      "position": {
+        "x": 1110,
+        "y": 712.5
+      },
+      "prompt": "What best describes your data?",
+      "variableName": "dataModel",
+      "inputType": "choice",
+      "choices": [
+        "Relational with complex queries (reports, joins)",
+        "Document/flexible schema (user profiles, content)",
+        "Time-series / events (IoT, analytics, logs)",
+        "Graph relationships (social, recommendations)",
+        "Binary / files (media, documents)"
+      ]
+    },
+    {
+      "id": "assumption_cloud",
+      "type": "assumption",
+      "label": "Cloud-Native",
+      "description": "Assumes cloud-native deployment from the start",
+      "position": {
+        "x": 1470,
+        "y": 712.5
+      },
+      "assumption": "The project will be deployed to a cloud platform (Azure, AWS, or GCP) from day one. Local/on-prem deployment is not a primary requirement.",
+      "variableName": "cloudNative",
+      "default": true,
+      "weightInfluence": [
+        {
+          "dimension": "performanceFocus",
+          "direction": "accept",
+          "strength": 0.7
+        },
+        {
+          "dimension": "licensingCost",
+          "direction": "reject",
+          "strength": 0.3
+        }
+      ]
+    },
+    {
+      "id": "decision_frontend",
+      "type": "decision",
+      "label": "Frontend Framework",
+      "description": "Choose the right frontend approach",
+      "position": {
+        "x": 1830,
+        "y": 420
+      },
+      "condition": "Which frontend approach fits your project type and team?",
+      "evaluateExpression": "{{projectType}}",
+      "weightBias": [
+        {
+          "dimension": "ecosystemMaturity",
+          "favorsBranch": "React + Next.js",
+          "strength": 0.5
+        },
+        {
+          "dimension": "buildSpeed",
+          "favorsBranch": "React + Vite SPA",
+          "strength": 0.6
+        },
+        {
+          "dimension": "devExperience",
+          "favorsBranch": "Server-rendered (Razor / Blazor)",
+          "strength": 0.4
+        },
+        {
+          "dimension": "performanceFocus",
+          "favorsBranch": "React + Next.js",
+          "strength": 0.5
+        }
+      ]
+    },
+    {
+      "id": "decision_backend",
+      "type": "decision",
+      "label": "Backend Framework",
+      "description": "Choose the backend technology",
+      "position": {
+        "x": 1830,
+        "y": 1005
+      },
+      "condition": "Which backend stack aligns with your expertise and requirements?",
+      "evaluateExpression": "{{teamExpertise}}",
+      "weightBias": [
+        {
+          "dimension": "performanceFocus",
+          "favorsBranch": "Go / Rust",
+          "strength": 0.8
+        },
+        {
+          "dimension": "buildSpeed",
+          "favorsBranch": "Node.js (Express / Fastify)",
+          "strength": 0.7
+        },
+        {
+          "dimension": "devExperience",
+          "favorsBranch": ".NET (ASP.NET Core)",
+          "strength": 0.5
+        },
+        {
+          "dimension": "ecosystemMaturity",
+          "favorsBranch": "Python (FastAPI)",
+          "strength": 0.4
+        }
+      ]
+    },
+    {
+      "id": "decision_database",
+      "type": "decision",
+      "label": "Database Selection",
+      "description": "Choose the right database for your data model",
+      "position": {
+        "x": 2190,
+        "y": 127.5
+      },
+      "condition": "Which database technology fits your data model and scale?",
+      "evaluateExpression": "{{dataModel}}",
+      "weightBias": [
+        {
+          "dimension": "performanceFocus",
+          "favorsBranch": "NoSQL (Cosmos DB / MongoDB)",
+          "strength": 0.7
+        },
+        {
+          "dimension": "devExperience",
+          "favorsBranch": "Relational (PostgreSQL / SQL Server)",
+          "strength": 0.4
+        },
+        {
+          "dimension": "licensingCost",
+          "favorsBranch": "Relational (PostgreSQL / SQL Server)",
+          "strength": 0.5
+        },
+        {
+          "dimension": "ecosystemMaturity",
+          "favorsBranch": "NoSQL (Cosmos DB / MongoDB)",
+          "strength": 0.3
+        }
+      ]
+    },
+    {
+      "id": "action_react_next",
+      "type": "action",
+      "label": "React + Next.js Stack",
+      "description": "Full-stack React with Next.js",
+      "position": {
+        "x": 2190,
+        "y": 322.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a complete project scaffold recommendation for React + Next.js.\n\nProject: {{projectType}}\nScale: {{expectedScale}}\nTeam: {{teamExpertise}}\nData: {{dataModel}}\nCloud: {{cloudNative}}\n\nInclude:\n1. Next.js App Router project structure\n2. State management recommendation (Zustand / React Query / Server Components)\n3. Styling approach (Tailwind CSS / CSS Modules)\n4. Auth strategy (NextAuth.js / MSAL)\n5. API layer (Route Handlers / tRPC / REST)\n6. Testing setup (Vitest + Playwright)\n7. Deployment config (Azure Static Web Apps / Vercel)\n8. package.json with recommended dependencies",
+      "systemPrompt": "You are a senior frontend architect. Provide opinionated, production-ready recommendations. Prefer convention over configuration. Include specific version numbers."
+    },
+    {
+      "id": "action_react_spa",
+      "type": "action",
+      "label": "React + Vite SPA",
+      "description": "Client-side SPA with Vite",
+      "position": {
+        "x": 2190,
+        "y": 517.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a React + Vite SPA project scaffold.\n\nProject: {{projectType}}\nScale: {{expectedScale}}\nTeam: {{teamExpertise}}\n\nInclude:\n1. Vite project structure with TypeScript\n2. React Router v7 setup\n3. State management (Zustand for client state, TanStack Query for server state)\n4. Component library recommendation\n5. API client setup with interceptors\n6. Build optimization (code splitting, lazy loading)\n7. Docker container for deployment",
+      "systemPrompt": "You are a React specialist. Provide a lean, fast SPA setup optimized for developer experience and build performance."
+    },
+    {
+      "id": "action_server_rendered",
+      "type": "action",
+      "label": "Server-Rendered Stack",
+      "description": "Blazor / Razor Pages / MVC approach",
+      "position": {
+        "x": 2190,
+        "y": 712.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a server-rendered web application scaffold.\n\nProject: {{projectType}}\nScale: {{expectedScale}}\nTeam: {{teamExpertise}}\nData: {{dataModel}}\n\nInclude:\n1. ASP.NET Core Razor Pages or Blazor Server setup\n2. Authentication with Microsoft Identity\n3. Entity Framework Core data layer\n4. SignalR for real-time features if needed\n5. Deployment to Azure App Service\n6. Recommended project structure following Clean Architecture",
+      "systemPrompt": "You are a .NET architect. Provide a practical, maintainable server-rendered setup that leverages the .NET ecosystem strengths."
+    },
+    {
+      "id": "action_sql",
+      "type": "action",
+      "label": "Relational DB Setup",
+      "description": "PostgreSQL / SQL Server architecture",
+      "position": {
+        "x": 2550,
+        "y": 30
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a relational database architecture recommendation.\n\nProject: {{projectType}}\nScale: {{expectedScale}}\nData: {{dataModel}}\nCloud: {{cloudNative}}\n\nInclude:\n1. PostgreSQL vs SQL Server decision matrix for this use case\n2. Schema design best practices\n3. Indexing strategy for common query patterns\n4. Connection pooling configuration\n5. Migration tool setup (EF Core Migrations / Flyway / golang-migrate)\n6. Read replica strategy if needed\n7. Backup and point-in-time recovery setup\n8. Azure managed service recommendation (Azure SQL / Azure PostgreSQL Flexible)",
+      "systemPrompt": "You are a database architect. Provide specific schema advice, not just generic recommendations. Include query patterns and index strategies appropriate to the project type."
+    },
+    {
+      "id": "action_nosql",
+      "type": "action",
+      "label": "NoSQL DB Setup",
+      "description": "Cosmos DB / MongoDB architecture",
+      "position": {
+        "x": 2550,
+        "y": 225
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a NoSQL database architecture recommendation.\n\nProject: {{projectType}}\nScale: {{expectedScale}}\nData: {{dataModel}}\nCloud: {{cloudNative}}\n\nInclude:\n1. Cosmos DB vs MongoDB Atlas decision for this use case\n2. Partition key strategy (critical for performance)\n3. Document schema design with denormalization patterns\n4. Consistency level selection and trade-offs\n5. Request Unit (RU) estimation and autoscale configuration\n6. Change Feed / Change Streams for event-driven patterns\n7. Cost optimization (TTL, server-side caching)\n8. SDK code sample for CRUD operations",
+      "systemPrompt": "You are a NoSQL architect specializing in Azure Cosmos DB. Partition key selection is the #1 performance decision — provide specific guidance based on access patterns."
+    },
+    {
+      "id": "action_backend_node",
+      "type": "action",
+      "label": "Node.js Backend",
+      "description": "Express or Fastify API setup",
+      "position": {
+        "x": 2190,
+        "y": 907.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a Node.js backend API scaffold.\n\nProject: {{projectType}}\nScale: {{expectedScale}}\nTeam: {{teamExpertise}}\nData: {{dataModel}}\n\nInclude:\n1. Express vs Fastify recommendation for this scale\n2. TypeScript project structure\n3. Middleware stack (auth, validation, error handling, logging)\n4. ORM recommendation (Prisma / Drizzle / TypeORM)\n5. API documentation (OpenAPI / Swagger)\n6. Testing setup (Vitest + Supertest)\n7. Docker multi-stage build\n8. Azure Container Apps deployment config",
+      "systemPrompt": "You are a Node.js backend architect. Provide a type-safe, well-structured API setup. Prefer Fastify for performance at scale."
+    },
+    {
+      "id": "action_backend_dotnet",
+      "type": "action",
+      "label": ".NET Backend",
+      "description": "ASP.NET Core Web API setup",
+      "position": {
+        "x": 2190,
+        "y": 1102.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate an ASP.NET Core Web API scaffold.\n\nProject: {{projectType}}\nScale: {{expectedScale}}\nTeam: {{teamExpertise}}\nData: {{dataModel}}\n\nInclude:\n1. Minimal API vs Controller-based recommendation\n2. Clean Architecture / Vertical Slice project structure\n3. Authentication (MSAL / JWT bearer)\n4. Entity Framework Core setup with migrations\n5. MediatR + FluentValidation pipeline\n6. Health checks and OpenTelemetry\n7. Aspire integration for local dev\n8. Azure App Service / Container Apps deployment",
+      "systemPrompt": "You are a .NET architect. Provide a modern ASP.NET Core 9 setup using minimal APIs where appropriate. Follow Microsoft best practices."
+    },
+    {
+      "id": "action_backend_python",
+      "type": "action",
+      "label": "Python Backend",
+      "description": "FastAPI / Django setup",
+      "position": {
+        "x": 2190,
+        "y": 1297.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a Python backend API scaffold.\n\nProject: {{projectType}}\nScale: {{expectedScale}}\nTeam: {{teamExpertise}}\nData: {{dataModel}}\n\nInclude:\n1. FastAPI vs Django recommendation for this use case\n2. Project structure with src layout\n3. Pydantic models for validation\n4. SQLAlchemy / Tortoise ORM setup\n5. Async support and connection pooling\n6. Testing with pytest + httpx\n7. Dockerized with uvicorn/gunicorn\n8. Azure Container Apps deployment",
+      "systemPrompt": "You are a Python backend engineer. Provide type-safe, async-first API setups. Use FastAPI for new projects unless Django's batteries are specifically needed."
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "input_project_type",
+      "target": "input_scale"
+    },
+    {
+      "id": "e2",
+      "source": "input_scale",
+      "target": "input_team_exp"
+    },
+    {
+      "id": "e3",
+      "source": "input_team_exp",
+      "target": "input_data_model"
+    },
+    {
+      "id": "e4",
+      "source": "input_data_model",
+      "target": "assumption_cloud"
+    },
+    {
+      "id": "e5_fe",
+      "source": "assumption_cloud",
+      "target": "decision_frontend"
+    },
+    {
+      "id": "e5_be",
+      "source": "assumption_cloud",
+      "target": "decision_backend"
+    },
+    {
+      "id": "e6_next",
+      "source": "decision_frontend",
+      "target": "action_react_next",
+      "label": "React + Next.js"
+    },
+    {
+      "id": "e6_spa",
+      "source": "decision_frontend",
+      "target": "action_react_spa",
+      "label": "React + Vite SPA"
+    },
+    {
+      "id": "e6_server",
+      "source": "decision_frontend",
+      "target": "action_server_rendered",
+      "label": "Server-rendered (Razor / Blazor)"
+    },
+    {
+      "id": "e7_node",
+      "source": "decision_backend",
+      "target": "action_backend_node",
+      "label": "Node.js (Express / Fastify)"
+    },
+    {
+      "id": "e7_dotnet",
+      "source": "decision_backend",
+      "target": "action_backend_dotnet",
+      "label": ".NET (ASP.NET Core)"
+    },
+    {
+      "id": "e7_python",
+      "source": "decision_backend",
+      "target": "action_backend_python",
+      "label": "Python (FastAPI)"
+    },
+    {
+      "id": "e7_go",
+      "source": "decision_backend",
+      "target": "action_backend_node",
+      "label": "Go / Rust"
+    },
+    {
+      "id": "e8_sql",
+      "source": "decision_database",
+      "target": "action_sql",
+      "label": "Relational (PostgreSQL / SQL Server)"
+    },
+    {
+      "id": "e8_nosql",
+      "source": "decision_database",
+      "target": "action_nosql",
+      "label": "NoSQL (Cosmos DB / MongoDB)"
+    },
+    {
+      "id": "e_fe_db",
+      "source": "decision_frontend",
+      "target": "decision_database"
+    },
+    {
+      "id": "e_be_db",
+      "source": "decision_backend",
+      "target": "decision_database"
+    }
+  ]
+}

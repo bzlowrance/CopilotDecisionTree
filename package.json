@@ -1,0 +1,20 @@
+{
+  "name": "decision-tree-copilot",
+  "version": "1.0.0",
+  "description": "Visual Decision Tree Builder for GitHub Copilot – structures AI reasoning with explicit inputs, assumptions, and decision paths",
+  "private": true,
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "npm run dev --workspace=server",
+    "dev:client": "npm run dev --workspace=client",
+    "build": "npm run build --workspace=server && npm run build --workspace=client",
+    "start": "npm run start --workspace=server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

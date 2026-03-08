@@ -1,0 +1,493 @@
+{
+  "id": "credit-risk-decision",
+  "name": "Risk-Based Credit Decision",
+  "description": "Guides credit analysts through a structured risk-based credit assessment — from applicant data collection through scoring, risk stratification, and approval/denial with conditions",
+  "version": "1.0.0",
+  "rootNodeId": "input_applicant_type",
+  "tags": [
+    "fintech",
+    "credit",
+    "risk",
+    "compliance",
+    "lending"
+  ],
+  "createdAt": "2026-03-04T00:00:00Z",
+  "updatedAt": "2026-03-08T05:49:37.561Z",
+  "defaultWeights": [
+    {
+      "id": "defaultRisk",
+      "label": "Default Risk",
+      "description": "Sensitivity to borrower default probability — high rejects marginal applicants, low approves more",
+      "value": 65,
+      "color": "#FF6B6B",
+      "icon": "⚠️"
+    },
+    {
+      "id": "processingSpeed",
+      "label": "Processing Speed",
+      "description": "Application turnaround pressure — high auto-decides more, low requires manual review",
+      "value": 50,
+      "color": "#4ECDC4",
+      "icon": "⏱️"
+    },
+    {
+      "id": "regulatoryWeight",
+      "label": "Regulatory Weight",
+      "description": "Compliance strictness — high applies conservative regulatory buffers, low uses minimum requirements",
+      "value": 80,
+      "color": "#45B7D1",
+      "icon": "📋"
+    },
+    {
+      "id": "profitMargin",
+      "label": "Profit Margin",
+      "description": "Revenue optimization — high prices for maximum margin, low competes on rate",
+      "value": 50,
+      "color": "#96CEB4",
+      "icon": "💰"
+    },
+    {
+      "id": "customerRetention",
+      "label": "Customer Retention",
+      "description": "Existing relationship value — high favors existing customers, low treats all applicants equally",
+      "value": 55,
+      "color": "#FFEAA7",
+      "icon": "🤝"
+    },
+    {
+      "id": "portfolioDiversity",
+      "label": "Portfolio Diversity",
+      "description": "Concentration risk management — high diversifies across sectors, low focuses on best returns",
+      "value": 50,
+      "color": "#DDA0DD",
+      "icon": "📊"
+    },
+    {
+      "id": "fraudDetection",
+      "label": "Fraud Detection",
+      "description": "Anti-fraud sensitivity — high flags more for review, low streamlines approvals",
+      "value": 70,
+      "color": "#F0E68C",
+      "icon": "🔒"
+    },
+    {
+      "id": "collateralWeight",
+      "label": "Collateral Weight",
+      "description": "Importance of collateral in decision — high requires strong backing, low considers cash flow",
+      "value": 60,
+      "color": "#87CEEB",
+      "icon": "🏠"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "input_applicant_type",
+      "type": "input",
+      "label": "Applicant Type",
+      "description": "What type of credit applicant is this?",
+      "prompt": "Is this a consumer (individual) or commercial (business) credit application?",
+      "variableName": "applicantType",
+      "inputType": "choice",
+      "choices": [
+        "Consumer — Individual",
+        "Commercial — Small Business",
+        "Commercial — Enterprise"
+      ],
+      "position": {
+        "x": 30,
+        "y": 300
+      }
+    },
+    {
+      "id": "input_credit_score",
+      "type": "input",
+      "label": "Credit Score Range",
+      "description": "Applicant's credit score determines the initial risk tier",
+      "prompt": "What is the applicant's credit score range?",
+      "variableName": "creditScoreRange",
+      "inputType": "choice",
+      "choices": [
+        "Excellent (750+)",
+        "Good (700–749)",
+        "Fair (650–699)",
+        "Poor (600–649)",
+        "Very Poor (<600)"
+      ],
+      "position": {
+        "x": 390,
+        "y": 300
+      }
+    },
+    {
+      "id": "assumption_regulatory",
+      "type": "assumption",
+      "label": "Regulatory Compliance",
+      "description": "Assumes compliance requirements are active",
+      "assumption": "This decision follows Fair Lending Act (ECOA), Truth in Lending Act (TILA), and applicable state regulations. All decisions must be documented with specific, non-discriminatory reasons for adverse actions.",
+      "weightInfluence": [
+        {
+          "dimension": "regulatoryWeight",
+          "direction": "accept",
+          "strength": 80
+        },
+        {
+          "dimension": "defaultRisk",
+          "direction": "reject",
+          "strength": 60
+        }
+      ],
+      "position": {
+        "x": 750,
+        "y": 300
+      }
+    },
+    {
+      "id": "input_dti_ratio",
+      "type": "input",
+      "label": "Debt-to-Income Ratio",
+      "description": "DTI is a key risk indicator for repayment ability",
+      "prompt": "What is the applicant's debt-to-income ratio?",
+      "variableName": "dtiRatio",
+      "inputType": "choice",
+      "choices": [
+        "Low (<20%)",
+        "Moderate (20–35%)",
+        "High (36–43%)",
+        "Very High (>43%)"
+      ],
+      "position": {
+        "x": 1110,
+        "y": 300
+      }
+    },
+    {
+      "id": "decision_initial_risk",
+      "type": "decision",
+      "label": "Initial Risk Tier",
+      "description": "Classify into risk tier based on credit score + DTI",
+      "condition": "Combine credit score range and DTI to determine initial risk classification",
+      "position": {
+        "x": 1470,
+        "y": 300
+      }
+    },
+    {
+      "id": "input_collateral",
+      "type": "input",
+      "label": "Collateral Available?",
+      "description": "Secured vs unsecured determines loss-given-default",
+      "prompt": "Is the applicant offering collateral to secure the credit?",
+      "variableName": "hasCollateral",
+      "inputType": "choice",
+      "choices": [
+        "Yes — Real estate",
+        "Yes — Vehicle/Equipment",
+        "Yes — Financial assets",
+        "No — Unsecured"
+      ],
+      "position": {
+        "x": 1830,
+        "y": 210
+      }
+    },
+    {
+      "id": "input_employment",
+      "type": "input",
+      "label": "Employment Stability",
+      "description": "Length and stability of income source",
+      "prompt": "How would you characterize the applicant's employment/income stability?",
+      "variableName": "employmentStability",
+      "inputType": "choice",
+      "choices": [
+        "Stable (2+ years same employer)",
+        "Moderate (1–2 years)",
+        "New (<1 year)",
+        "Self-employed/Variable income"
+      ],
+      "position": {
+        "x": 1830,
+        "y": 390
+      }
+    },
+    {
+      "id": "decision_enhanced_review",
+      "type": "decision",
+      "label": "Enhanced Review Needed?",
+      "description": "Determine if application needs manual underwriter review",
+      "condition": "If risk tier is Medium-High or above, OR DTI > 36%, OR employment < 1 year, escalate to enhanced review",
+      "weightBias": [
+        {
+          "dimension": "defaultRisk",
+          "favorsBranch": "auto_approve_path",
+          "strength": 70
+        },
+        {
+          "dimension": "regulatoryWeight",
+          "favorsBranch": "manual_review_path",
+          "strength": 80
+        }
+      ],
+      "position": {
+        "x": 2190,
+        "y": 300
+      }
+    },
+    {
+      "id": "assumption_fraud_check",
+      "type": "assumption",
+      "label": "Fraud Screening Passed",
+      "description": "Assumes identity verification and fraud screening are complete",
+      "assumption": "Applicant has passed KYC (Know Your Customer) verification, OFAC screening, and automated fraud detection. Identity documents have been validated. If any fraud flags exist, this tree should not be used — escalate to fraud investigation team.",
+      "weightInfluence": [
+        {
+          "dimension": "regulatoryWeight",
+          "direction": "accept",
+          "strength": 90
+        }
+      ],
+      "position": {
+        "x": 2550,
+        "y": 350
+      }
+    },
+    {
+      "id": "input_loan_amount",
+      "type": "input",
+      "label": "Requested Amount",
+      "description": "Loan amount relative to income determines exposure",
+      "prompt": "What is the requested credit amount relative to the applicant's annual income?",
+      "variableName": "loanToIncomeRatio",
+      "inputType": "choice",
+      "choices": [
+        "Conservative (<2x annual income)",
+        "Standard (2–4x annual income)",
+        "Aggressive (4–6x annual income)",
+        "High exposure (>6x annual income)"
+      ],
+      "position": {
+        "x": 2910,
+        "y": 300
+      }
+    },
+    {
+      "id": "decision_pricing_tier",
+      "type": "decision",
+      "label": "Risk-Based Pricing Tier",
+      "description": "Determine interest rate tier based on aggregate risk factors",
+      "condition": "Map combined risk profile (score + DTI + collateral + employment + amount) to pricing tier: Prime, Near-Prime, Subprime, or Decline",
+      "weightBias": [
+        {
+          "dimension": "profitMargin",
+          "favorsBranch": "prime_rate",
+          "strength": 60
+        },
+        {
+          "dimension": "defaultRisk",
+          "favorsBranch": "subprime_rate",
+          "strength": 50
+        }
+      ],
+      "position": {
+        "x": 3270,
+        "y": 300
+      }
+    },
+    {
+      "id": "action_approve_prime",
+      "type": "action",
+      "label": "Approve — Prime Rate",
+      "description": "Low-risk applicant: approve at prime interest rate",
+      "actionType": "copilot_prompt",
+      "systemPrompt": "You are a credit decisioning system. Generate a structured credit approval letter for a prime-rate applicant. Include: approved amount, interest rate range (prime), key terms, required documentation, and compliance disclosures required by TILA and ECOA.",
+      "template": "Generate prime-rate credit approval for applicant type: {{applicantType}}, credit score: {{creditScoreRange}}, DTI: {{dtiRatio}}, collateral: {{hasCollateral}}, employment: {{employmentStability}}, requested amount: {{loanToIncomeRatio}}",
+      "position": {
+        "x": 3630,
+        "y": 30
+      }
+    },
+    {
+      "id": "action_approve_conditions",
+      "type": "action",
+      "label": "Approve — With Conditions",
+      "description": "Medium-risk applicant: approve with mitigating conditions",
+      "actionType": "copilot_prompt",
+      "systemPrompt": "You are a credit decisioning system. Generate a conditional credit approval for a near-prime applicant. Include: approved amount (may be reduced), interest rate range (above prime), specific conditions (additional documentation, collateral requirements, co-signer, lower limit), and compliance disclosures.",
+      "template": "Generate conditional credit approval for applicant type: {{applicantType}}, credit score: {{creditScoreRange}}, DTI: {{dtiRatio}}, collateral: {{hasCollateral}}, employment: {{employmentStability}}, amount class: {{loanToIncomeRatio}}. Identify specific risk mitigants required.",
+      "position": {
+        "x": 3630,
+        "y": 210
+      }
+    },
+    {
+      "id": "action_approve_subprime",
+      "type": "action",
+      "label": "Approve — Subprime Rate",
+      "description": "Higher-risk applicant: approve at subprime rate with strict terms",
+      "actionType": "copilot_prompt",
+      "systemPrompt": "You are a credit decisioning system. Generate a subprime credit approval with risk-appropriate terms. Include: reduced approved amount, higher interest rate range, mandatory collateral or co-signer requirements, shorter review periods, and full adverse action disclosures per ECOA if terms differ significantly from requested.",
+      "template": "Generate subprime credit terms for applicant type: {{applicantType}}, credit score: {{creditScoreRange}}, DTI: {{dtiRatio}}, collateral: {{hasCollateral}}, employment: {{employmentStability}}, amount requested: {{loanToIncomeRatio}}. Include risk-based pricing justification.",
+      "position": {
+        "x": 3630,
+        "y": 390
+      }
+    },
+    {
+      "id": "action_decline",
+      "type": "action",
+      "label": "Decline — Adverse Action",
+      "description": "High-risk applicant: decline with required adverse action notice",
+      "actionType": "copilot_prompt",
+      "systemPrompt": "You are a credit decisioning system. Generate a compliant adverse action notice per ECOA and Fair Credit Reporting Act requirements. Include: specific reasons for denial (up to 4, non-discriminatory), credit bureau used, applicant's right to obtain free credit report within 60 days, right to dispute, and contact information for the creditor. Do NOT include any language that could be interpreted as discriminatory under fair lending laws.",
+      "template": "Generate adverse action notice for: applicant type: {{applicantType}}, credit score: {{creditScoreRange}}, DTI: {{dtiRatio}}, collateral: {{hasCollateral}}, employment: {{employmentStability}}, requested amount: {{loanToIncomeRatio}}. Provide exactly 4 specific, compliant denial reasons.",
+      "position": {
+        "x": 3630,
+        "y": 570
+      }
+    },
+    {
+      "id": "assumption_data_retention",
+      "type": "assumption",
+      "label": "Data Retention Policy",
+      "description": "All decision data must be retained per regulatory requirements",
+      "assumption": "All inputs, intermediate risk scores, weight configurations, and final decisions will be retained for a minimum of 25 months per ECOA record retention requirements, and 7 years for commercial credit. Decision audit trail must include the weight profile used at time of decision.",
+      "weightInfluence": [
+        {
+          "dimension": "regulatoryWeight",
+          "direction": "accept",
+          "strength": 70
+        },
+        {
+          "dimension": "collateralWeight",
+          "direction": "reject",
+          "strength": 50
+        }
+      ],
+      "position": {
+        "x": 3990,
+        "y": 300
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "input_applicant_type",
+      "target": "input_credit_score",
+      "label": ""
+    },
+    {
+      "id": "e2",
+      "source": "input_credit_score",
+      "target": "assumption_regulatory",
+      "label": ""
+    },
+    {
+      "id": "e3",
+      "source": "assumption_regulatory",
+      "target": "input_dti_ratio",
+      "label": "Confirmed"
+    },
+    {
+      "id": "e4",
+      "source": "input_dti_ratio",
+      "target": "decision_initial_risk",
+      "label": ""
+    },
+    {
+      "id": "e5",
+      "source": "decision_initial_risk",
+      "target": "input_collateral",
+      "label": "Medium-High Risk"
+    },
+    {
+      "id": "e6",
+      "source": "decision_initial_risk",
+      "target": "input_employment",
+      "label": "Low-Medium Risk"
+    },
+    {
+      "id": "e7",
+      "source": "input_collateral",
+      "target": "decision_enhanced_review",
+      "label": ""
+    },
+    {
+      "id": "e8",
+      "source": "input_employment",
+      "target": "decision_enhanced_review",
+      "label": ""
+    },
+    {
+      "id": "e9",
+      "source": "decision_enhanced_review",
+      "target": "assumption_fraud_check",
+      "label": "Manual Review"
+    },
+    {
+      "id": "e10",
+      "source": "decision_enhanced_review",
+      "target": "input_loan_amount",
+      "label": "Auto-Decisioning"
+    },
+    {
+      "id": "e11",
+      "source": "assumption_fraud_check",
+      "target": "input_loan_amount",
+      "label": "Cleared"
+    },
+    {
+      "id": "e12",
+      "source": "input_loan_amount",
+      "target": "decision_pricing_tier",
+      "label": ""
+    },
+    {
+      "id": "e13",
+      "source": "decision_pricing_tier",
+      "target": "action_approve_prime",
+      "label": "Prime"
+    },
+    {
+      "id": "e14",
+      "source": "decision_pricing_tier",
+      "target": "action_approve_conditions",
+      "label": "Near-Prime"
+    },
+    {
+      "id": "e15",
+      "source": "decision_pricing_tier",
+      "target": "action_approve_subprime",
+      "label": "Subprime"
+    },
+    {
+      "id": "e16",
+      "source": "decision_pricing_tier",
+      "target": "action_decline",
+      "label": "Decline"
+    },
+    {
+      "id": "e17",
+      "source": "action_approve_prime",
+      "target": "assumption_data_retention",
+      "label": ""
+    },
+    {
+      "id": "e18",
+      "source": "action_approve_conditions",
+      "target": "assumption_data_retention",
+      "label": ""
+    },
+    {
+      "id": "e19",
+      "source": "action_approve_subprime",
+      "target": "assumption_data_retention",
+      "label": ""
+    },
+    {
+      "id": "e20",
+      "source": "action_decline",
+      "target": "assumption_data_retention",
+      "label": ""
+    }
+  ]
+}

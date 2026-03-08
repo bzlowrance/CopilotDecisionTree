@@ -1,0 +1,1220 @@
+{
+  "id": "medical-symptom-diagnosis",
+  "name": "Medical Symptom & Diagnosis",
+  "description": "Comprehensive clinical decision support covering 7 body systems — cardiovascular, neurological, gastrointestinal, respiratory, musculoskeletal, dermatological, and systemic — with triage, differential diagnosis, lab/imaging interpretation, medication review, and feedback loops for treatment monitoring",
+  "version": "1.0.0",
+  "rootNodeId": "input_primary_symptom",
+  "tags": [
+    "medical",
+    "diagnosis",
+    "triage",
+    "symptoms",
+    "clinical",
+    "differential-diagnosis",
+    "treatment",
+    "lab-results",
+    "imaging",
+    "specialist-referral"
+  ],
+  "createdAt": "2026-03-04T00:00:00Z",
+  "updatedAt": "2026-03-08T04:52:30.348Z",
+  "defaultWeights": [
+    {
+      "id": "patientSafety",
+      "label": "Patient Safety",
+      "description": "Conservative vs aggressive approach — high value errs on caution, orders more tests, and assumes worst-case differentials first",
+      "value": 85,
+      "color": "#FF4444",
+      "icon": "🛡️"
+    },
+    {
+      "id": "diagnosticUrgency",
+      "label": "Diagnostic Urgency",
+      "description": "How quickly a diagnosis and intervention are needed — high value expedites workup and lowers the threshold for emergency action",
+      "value": 60,
+      "color": "#FF8C00",
+      "icon": "⏱️"
+    },
+    {
+      "id": "testInvasiveness",
+      "label": "Test Invasiveness",
+      "description": "Preference for non-invasive testing first — high value starts with labs and imaging before biopsies or scopes",
+      "value": 70,
+      "color": "#4ECDC4",
+      "icon": "🩺"
+    },
+    {
+      "id": "costConsciousness",
+      "label": "Cost Consciousness",
+      "description": "Patient financial burden consideration — high value suggests cost-effective alternatives (generics, outpatient vs inpatient, fewer panels)",
+      "value": 50,
+      "color": "#45B7D1",
+      "icon": "💲"
+    },
+    {
+      "id": "differentialBreadth",
+      "label": "Differential Breadth",
+      "description": "How many possible diagnoses to consider simultaneously — high casts a wide net, low focuses on the most probable diagnosis",
+      "value": 65,
+      "color": "#9B59B6",
+      "icon": "🔀"
+    },
+    {
+      "id": "evidenceStrength",
+      "label": "Evidence Strength",
+      "description": "Reliance on evidence-based guidelines (UpToDate, ACC/AHA, NICE) — high follows protocols strictly, low relies on clinical judgment",
+      "value": 75,
+      "color": "#2ECC71",
+      "icon": "📋"
+    },
+    {
+      "id": "specialistThreshold",
+      "label": "Specialist Threshold",
+      "description": "When to refer to a specialist — high refers early for complex presentations, low manages more in primary care",
+      "value": 55,
+      "color": "#DDA0DD",
+      "icon": "👨‍⚕️"
+    },
+    {
+      "id": "holisticCare",
+      "label": "Holistic Care",
+      "description": "Consider psychosocial factors, mental health, lifestyle, and social determinants — high includes screening for anxiety, depression, and social support",
+      "value": 60,
+      "color": "#F39C12",
+      "icon": "🧠"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "input_primary_symptom",
+      "type": "input",
+      "label": "Primary Symptom Category",
+      "description": "Select the main body system or symptom area of concern",
+      "position": {
+        "x": 30,
+        "y": 1408.75
+      },
+      "prompt": "What is the primary symptom or body system affected?",
+      "variableName": "primarySymptom",
+      "inputType": "choice",
+      "choices": [
+        "Chest / Cardiovascular — chest pain, palpitations, shortness of breath, edema",
+        "Neurological — headache, dizziness, numbness, tingling, seizures, vision changes",
+        "Gastrointestinal — abdominal pain, nausea, vomiting, diarrhea, constipation, blood in stool",
+        "Respiratory — cough, wheezing, difficulty breathing, sputum production",
+        "Musculoskeletal — joint pain, back pain, swelling, stiffness, limited mobility",
+        "Dermatological — rash, itching, skin lesions, discoloration, wound concerns",
+        "General / Systemic — fever, fatigue, weight changes, night sweats, malaise"
+      ]
+    },
+    {
+      "id": "input_duration",
+      "type": "input",
+      "label": "Symptom Duration & Onset",
+      "description": "When did the symptom start and how quickly did it develop",
+      "position": {
+        "x": 350,
+        "y": 1408.75
+      },
+      "prompt": "How long have you had this symptom and how did it start?",
+      "variableName": "symptomDuration",
+      "inputType": "choice",
+      "choices": [
+        "Sudden onset — seconds to minutes (acute emergency consideration)",
+        "Acute — started within the last 24 hours",
+        "Subacute — developed over 1–7 days",
+        "Chronic — present for more than 1 week",
+        "Recurrent — comes and goes repeatedly over weeks/months",
+        "Progressive — gradually worsening over time"
+      ]
+    },
+    {
+      "id": "input_demographics",
+      "type": "input",
+      "label": "Patient Demographics",
+      "description": "Age, sex, height, weight, and relevant demographic information",
+      "position": {
+        "x": 670,
+        "y": 1408.75
+      },
+      "prompt": "Provide the patient's age, biological sex, height, and weight (e.g., '45-year-old male, 5'10\", 185 lbs')",
+      "variableName": "demographics",
+      "inputType": "text"
+    },
+    {
+      "id": "input_pain_scale",
+      "type": "input",
+      "label": "Pain Severity (0–10)",
+      "description": "Rate pain intensity on the standard numeric rating scale",
+      "position": {
+        "x": 990,
+        "y": 1408.75
+      },
+      "prompt": "Rate the pain severity on a scale from 0 (no pain) to 10 (worst imaginable pain)",
+      "variableName": "painScale",
+      "inputType": "number"
+    },
+    {
+      "id": "input_vitals",
+      "type": "input",
+      "label": "Vital Signs",
+      "description": "Current vital signs including blood pressure, heart rate, temperature, respiratory rate, and oxygen saturation",
+      "position": {
+        "x": 1310,
+        "y": 1408.75
+      },
+      "prompt": "Enter the patient's vital signs: Blood Pressure (e.g., 120/80), Heart Rate (bpm), Temperature (°F or °C), Respiratory Rate (breaths/min), SpO2 (%)",
+      "variableName": "vitalSigns",
+      "inputType": "text"
+    },
+    {
+      "id": "input_history",
+      "type": "input",
+      "label": "Medical History & Medications",
+      "description": "Relevant past medical history, surgical history, current medications, and known allergies",
+      "position": {
+        "x": 1630,
+        "y": 1408.75
+      },
+      "prompt": "Describe the patient's medical history, including: past diagnoses, surgeries, current medications (with doses if known), and any known allergies",
+      "variableName": "medicalHistory",
+      "inputType": "text"
+    },
+    {
+      "id": "input_associated",
+      "type": "input",
+      "label": "Associated Symptoms",
+      "description": "Other symptoms occurring alongside the primary complaint",
+      "position": {
+        "x": 1952,
+        "y": 1404.75
+      },
+      "prompt": "What other symptoms are present? (e.g., fever, nausea, sweating, anxiety, loss of appetite, swollen lymph nodes)",
+      "variableName": "associatedSymptoms",
+      "inputType": "text"
+    },
+    {
+      "id": "input_lifestyle",
+      "type": "input",
+      "label": "Lifestyle & Social History",
+      "description": "Smoking status, alcohol use, exercise habits, diet, stress level, occupation",
+      "position": {
+        "x": 2270,
+        "y": 1408.75
+      },
+      "prompt": "Describe relevant lifestyle factors: smoking (pack-years), alcohol use, exercise frequency, diet, stress level, occupation, and recent travel",
+      "variableName": "lifestyleFactors",
+      "inputType": "text"
+    },
+    {
+      "id": "input_image_upload",
+      "type": "input",
+      "label": "Clinical Image Upload",
+      "description": "Upload a photo of the affected area — skin lesion, rash, swelling, wound, or any visible finding",
+      "position": {
+        "x": 2590,
+        "y": 1408.75
+      },
+      "prompt": "Upload a clinical image if applicable (skin lesion, rash, swelling, wound, X-ray, or any visible finding)",
+      "variableName": "clinicalImage",
+      "inputType": "image"
+    },
+    {
+      "id": "assumption_no_immediate_threat",
+      "type": "assumption",
+      "label": "No Immediate Life Threat",
+      "description": "Assumes patient is not in immediate cardiopulmonary arrest or anaphylaxis",
+      "position": {
+        "x": 2910,
+        "y": 1408.75
+      },
+      "assumption": "The patient is conscious, breathing, and hemodynamically stable enough for a structured evaluation. If the patient is unresponsive, in respiratory failure, or showing signs of anaphylaxis/cardiac arrest, this tree should be bypassed for immediate emergency protocols (BLS/ACLS).",
+      "variableName": "noImmediateThreat",
+      "default": true,
+      "weightInfluence": [
+        {
+          "dimension": "patientSafety",
+          "direction": "increase",
+          "strength": 0.9
+        },
+        {
+          "dimension": "diagnosticUrgency",
+          "direction": "increase",
+          "strength": 0.7
+        }
+      ]
+    },
+    {
+      "id": "assumption_medication_compliance",
+      "type": "assumption",
+      "label": "Medication Compliance",
+      "description": "Assumes the patient is taking prescribed medications as directed",
+      "position": {
+        "x": 3230,
+        "y": 1408.75
+      },
+      "assumption": "The patient has been compliant with their current medication regimen. Non-compliance may be a significant cause of symptom onset or worsening (e.g., missed antihypertensives, skipped insulin, stopped anticoagulants). If false, medication non-adherence should be considered as a primary contributing factor.",
+      "variableName": "medicationCompliance",
+      "default": true,
+      "weightInfluence": [
+        {
+          "dimension": "evidenceStrength",
+          "direction": "increase",
+          "strength": 0.5
+        },
+        {
+          "dimension": "costConsciousness",
+          "direction": "increase",
+          "strength": 0.4
+        }
+      ]
+    },
+    {
+      "id": "assumption_accurate_reporting",
+      "type": "assumption",
+      "label": "Accurate Self-Reporting",
+      "description": "Assumes the patient is reporting symptoms accurately and honestly",
+      "position": {
+        "x": 3550,
+        "y": 1408.75
+      },
+      "assumption": "The patient is providing an accurate and honest account of their symptoms, duration, and severity. In some cases (pediatric, geriatric, psychiatric, or secondary gain scenarios), self-reporting may be unreliable and objective findings should be weighted more heavily.",
+      "variableName": "accurateReporting",
+      "default": true,
+      "weightInfluence": [
+        {
+          "dimension": "differentialBreadth",
+          "direction": "increase",
+          "strength": 0.4
+        },
+        {
+          "dimension": "holisticCare",
+          "direction": "increase",
+          "strength": 0.3
+        }
+      ]
+    },
+    {
+      "id": "assumption_no_drug_allergies",
+      "type": "assumption",
+      "label": "No Known Drug Allergies",
+      "description": "Assumes no known drug allergies unless documented in medical history",
+      "position": {
+        "x": 3870,
+        "y": 1408.75
+      },
+      "assumption": "The patient has no known drug allergies (NKDA) beyond what is documented in their medical history. If set to false, all medication recommendations should be cross-referenced against known allergies, and alternatives should be suggested proactively.",
+      "variableName": "noDrugAllergies",
+      "default": false,
+      "weightInfluence": [
+        {
+          "dimension": "patientSafety",
+          "direction": "increase",
+          "strength": 0.8
+        },
+        {
+          "dimension": "testInvasiveness",
+          "direction": "increase",
+          "strength": 0.3
+        }
+      ]
+    },
+    {
+      "id": "decision_urgency_triage",
+      "type": "decision",
+      "label": "Urgency Triage",
+      "description": "Classify the presentation as Emergency, Urgent, or Routine based on vitals, pain, and red flags",
+      "position": {
+        "x": 4190,
+        "y": 1408.75
+      },
+      "condition": "Triage the patient's presentation based on vital signs, pain severity, symptom onset, and red flag indicators",
+      "evaluateExpression": "{{vitalSigns}} + {{painScale}} + {{symptomDuration}}",
+      "weightBias": [
+        {
+          "dimension": "patientSafety",
+          "favorsBranch": "Emergency",
+          "strength": 0.9
+        },
+        {
+          "dimension": "diagnosticUrgency",
+          "favorsBranch": "Emergency",
+          "strength": 0.85
+        },
+        {
+          "dimension": "costConsciousness",
+          "favorsBranch": "Routine",
+          "strength": 0.5
+        },
+        {
+          "dimension": "evidenceStrength",
+          "favorsBranch": "Urgent",
+          "strength": 0.6
+        }
+      ]
+    },
+    {
+      "id": "decision_red_flags",
+      "type": "decision",
+      "label": "Red Flag Assessment",
+      "description": "Screen for critical warning signs that require immediate intervention",
+      "position": {
+        "x": 4510,
+        "y": 621.25
+      },
+      "condition": "Evaluate for red flags: sudden worst headache, chest pain with radiation, hemodynamic instability, altered consciousness, acute neuro deficit, signs of sepsis, acute abdomen",
+      "evaluateExpression": "{{primarySymptom}} + {{associatedSymptoms}} + {{vitalSigns}} + {{painScale}}",
+      "weightBias": [
+        {
+          "dimension": "patientSafety",
+          "favorsBranch": "Red Flags Present",
+          "strength": 0.95
+        },
+        {
+          "dimension": "diagnosticUrgency",
+          "favorsBranch": "Red Flags Present",
+          "strength": 0.9
+        },
+        {
+          "dimension": "differentialBreadth",
+          "favorsBranch": "No Red Flags",
+          "strength": 0.5
+        },
+        {
+          "dimension": "specialistThreshold",
+          "favorsBranch": "Red Flags Present",
+          "strength": 0.7
+        }
+      ]
+    },
+    {
+      "id": "decision_age_risk",
+      "type": "decision",
+      "label": "Pain & Risk Stratification",
+      "description": "Stratify by pain severity and age-related risk factors to determine if pain management is needed before workup",
+      "position": {
+        "x": 4830,
+        "y": 2396.25
+      },
+      "condition": "If pain is ≥7/10 or patient is in a high-risk age group (pediatric <5, geriatric >75), route through pain management first; otherwise proceed to system-specific workup",
+      "evaluateExpression": "{{painScale}} + {{demographics}}",
+      "weightBias": [
+        {
+          "dimension": "patientSafety",
+          "favorsBranch": "High Pain",
+          "strength": 0.7
+        },
+        {
+          "dimension": "holisticCare",
+          "favorsBranch": "High Pain",
+          "strength": 0.6
+        },
+        {
+          "dimension": "diagnosticUrgency",
+          "favorsBranch": "Standard Path",
+          "strength": 0.4
+        },
+        {
+          "dimension": "testInvasiveness",
+          "favorsBranch": "Standard Path",
+          "strength": 0.3
+        }
+      ]
+    },
+    {
+      "id": "decision_system_route",
+      "type": "decision",
+      "label": "System Routing",
+      "description": "Route to the appropriate diagnostic workup based on the primary symptom category",
+      "position": {
+        "x": 5470,
+        "y": 1755
+      },
+      "condition": "Route to the specific body-system diagnostic pathway based on the patient's primary symptom selection",
+      "evaluateExpression": "{{primarySymptom}}",
+      "weightBias": [
+        {
+          "dimension": "patientSafety",
+          "favorsBranch": "Chest / Cardiovascular",
+          "strength": 0.8
+        },
+        {
+          "dimension": "specialistThreshold",
+          "favorsBranch": "Neurological",
+          "strength": 0.7
+        },
+        {
+          "dimension": "differentialBreadth",
+          "favorsBranch": "General / Systemic",
+          "strength": 0.6
+        },
+        {
+          "dimension": "holisticCare",
+          "favorsBranch": "General / Systemic",
+          "strength": 0.5
+        }
+      ]
+    },
+    {
+      "id": "decision_chronic_vs_acute",
+      "type": "decision",
+      "label": "Chronic vs Acute",
+      "description": "Determine whether the confirmed diagnosis represents an acute episode or a chronic condition requiring long-term management",
+      "position": {
+        "x": 6110,
+        "y": 1026.25
+      },
+      "condition": "Is this diagnosis an acute episode that will resolve with treatment, or a chronic/recurring condition requiring ongoing management?",
+      "evaluateExpression": "{{symptomDuration}} + {{medicalHistory}}",
+      "weightBias": [
+        {
+          "dimension": "diagnosticUrgency",
+          "favorsBranch": "Acute Episode",
+          "strength": 0.7
+        },
+        {
+          "dimension": "costConsciousness",
+          "favorsBranch": "Chronic Condition",
+          "strength": 0.6
+        },
+        {
+          "dimension": "evidenceStrength",
+          "favorsBranch": "Chronic Condition",
+          "strength": 0.5
+        },
+        {
+          "dimension": "holisticCare",
+          "favorsBranch": "Chronic Condition",
+          "strength": 0.7
+        }
+      ]
+    },
+    {
+      "id": "action_cardiac_workup",
+      "type": "action",
+      "label": "Cardiac Workup",
+      "description": "Copilot generates a cardiovascular diagnostic plan based on patient presentation",
+      "position": {
+        "x": 5790,
+        "y": 2212.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Patient: {{demographics}}\nVitals: {{vitalSigns}}\nPrimary Symptom: {{primarySymptom}}\nPain: {{painScale}}/10\nDuration: {{symptomDuration}}\nAssociated Symptoms: {{associatedSymptoms}}\nMedical History: {{medicalHistory}}\nLifestyle: {{lifestyleFactors}}\nMedication Compliance: {{medicationCompliance}}\nNKDA: {{noDrugAllergies}}\n\nAs a clinical decision support system, generate a cardiovascular workup:\n1. Top 3 differential diagnoses ranked by probability (ACS, PE, aortic dissection, arrhythmia, pericarditis, HF exacerbation, GERD, musculoskeletal)\n2. Recommended diagnostic tests in order (ECG → troponin → BNP → echo → stress test → CT angiography)\n3. Risk stratification using HEART score, Wells criteria, or TIMI as appropriate\n4. Red flags requiring immediate cardiology consult\n5. Initial management while awaiting results"
+    },
+    {
+      "id": "action_neuro_assessment",
+      "type": "action",
+      "label": "Neurological Assessment",
+      "description": "Copilot generates a neurological diagnostic plan",
+      "position": {
+        "x": 5790,
+        "y": 1987.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Patient: {{demographics}}\nVitals: {{vitalSigns}}\nPrimary Symptom: {{primarySymptom}}\nPain: {{painScale}}/10\nDuration: {{symptomDuration}}\nAssociated Symptoms: {{associatedSymptoms}}\nMedical History: {{medicalHistory}}\nLifestyle: {{lifestyleFactors}}\n\nAs a clinical decision support system, generate a neurological assessment:\n1. Top 3 differential diagnoses (stroke/TIA, migraine, tension headache, cluster headache, meningitis, MS, peripheral neuropathy, vestibular disorder, seizure disorder)\n2. Focused neurological exam findings to evaluate (cranial nerves, motor/sensory, reflexes, coordination, gait)\n3. Recommended diagnostics (CT head → MRI brain → lumbar puncture → EEG → nerve conduction)\n4. Time-critical decisions (stroke window <4.5h for tPA, < 24h for thrombectomy)\n5. NIH Stroke Scale components if stroke suspected\n6. Headache red flags (thunderclap, worst-ever, fever + neck stiffness, new after 50)"
+    },
+    {
+      "id": "action_gi_differential",
+      "type": "action",
+      "label": "GI Differential Diagnosis",
+      "description": "Copilot generates a gastrointestinal diagnostic plan",
+      "position": {
+        "x": 5790,
+        "y": 1762.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Patient: {{demographics}}\nVitals: {{vitalSigns}}\nPrimary Symptom: {{primarySymptom}}\nPain: {{painScale}}/10\nDuration: {{symptomDuration}}\nAssociated Symptoms: {{associatedSymptoms}}\nMedical History: {{medicalHistory}}\nLifestyle: {{lifestyleFactors}}\nNKDA: {{noDrugAllergies}}\n\nAs a clinical decision support system, generate a GI differential diagnosis:\n1. Top 3 differentials by quadrant and presentation (appendicitis, cholecystitis, pancreatitis, peptic ulcer, GERD, IBD, IBS, diverticulitis, bowel obstruction, GI bleed, hepatitis)\n2. Physical exam maneuvers (Murphy's sign, McBurney's point, rebound tenderness, guarding, bowel sounds)\n3. Lab panel (CBC, CMP, lipase, amylase, LFTs, stool studies, H. pylori, celiac panel)\n4. Imaging sequence (abdominal X-ray → ultrasound → CT abdomen/pelvis with contrast)\n5. Surgical urgency assessment (acute abdomen signs, peritonitis, perforation)\n6. Dietary and lifestyle modifications while workup proceeds"
+    },
+    {
+      "id": "action_respiratory_eval",
+      "type": "action",
+      "label": "Respiratory Evaluation",
+      "description": "Copilot generates a respiratory diagnostic plan",
+      "position": {
+        "x": 5790,
+        "y": 1537.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Patient: {{demographics}}\nVitals: {{vitalSigns}} (SpO2 critical)\nPrimary Symptom: {{primarySymptom}}\nPain: {{painScale}}/10\nDuration: {{symptomDuration}}\nAssociated Symptoms: {{associatedSymptoms}}\nMedical History: {{medicalHistory}}\nLifestyle: {{lifestyleFactors}} (smoking history critical)\n\nAs a clinical decision support system, generate a respiratory evaluation:\n1. Top 3 differentials (pneumonia, COPD exacerbation, asthma, PE, pneumothorax, bronchitis, lung cancer, TB, COVID-19, pleural effusion)\n2. Auscultation findings to assess (wheezes, crackles, rhonchi, diminished, absent breath sounds)\n3. Diagnostic sequence (chest X-ray → CT chest → PFTs → ABG → sputum culture → D-dimer → CT-PE)\n4. Oxygen therapy algorithm based on SpO2 levels\n5. CURB-65 score for pneumonia severity if applicable\n6. Smoking cessation assessment and recommendation\n7. Isolation precautions if infection suspected"
+    },
+    {
+      "id": "action_msk_assessment",
+      "type": "action",
+      "label": "Musculoskeletal Assessment",
+      "description": "Copilot generates a musculoskeletal diagnostic plan",
+      "position": {
+        "x": 5790,
+        "y": 1312.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Patient: {{demographics}}\nVitals: {{vitalSigns}}\nPrimary Symptom: {{primarySymptom}}\nPain: {{painScale}}/10\nDuration: {{symptomDuration}}\nAssociated Symptoms: {{associatedSymptoms}}\nMedical History: {{medicalHistory}}\nLifestyle: {{lifestyleFactors}}\nClinical Image: {{clinicalImage}}\n\nAs a clinical decision support system, generate a musculoskeletal assessment:\n1. Top 3 differentials (osteoarthritis, rheumatoid arthritis, gout, fracture, tendinopathy, bursitis, disc herniation, spinal stenosis, fibromyalgia, septic arthritis)\n2. Physical exam focus (ROM, strength, joint stability, neurovascular status, special tests: straight leg raise, Lachman, McMurray)\n3. Lab work if inflammatory (ESR, CRP, uric acid, ANA, RF, anti-CCP, HLA-B27)\n4. Imaging approach (X-ray → MRI for soft tissue → bone scan if occult fracture)\n5. Red flags (joint infection, cauda equina syndrome, compartment syndrome, fracture)\n6. Non-pharmacological management (RICE, physical therapy, ergonomic modification)"
+    },
+    {
+      "id": "action_derm_differential",
+      "type": "action",
+      "label": "Dermatological Differential",
+      "description": "Copilot generates a dermatological diagnostic plan with image analysis consideration",
+      "position": {
+        "x": 5790,
+        "y": 1087.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Patient: {{demographics}}\nVitals: {{vitalSigns}}\nPrimary Symptom: {{primarySymptom}}\nPain/Itch: {{painScale}}/10\nDuration: {{symptomDuration}}\nAssociated Symptoms: {{associatedSymptoms}}\nMedical History: {{medicalHistory}}\nLifestyle: {{lifestyleFactors}}\nClinical Image: {{clinicalImage}}\n\nAs a clinical decision support system, generate a dermatological differential:\n1. Morphological classification (macule, papule, vesicle, plaque, nodule, erosion, ulcer)\n2. Top 3 differentials (eczema, psoriasis, contact dermatitis, fungal infection, cellulitis, herpes zoster, urticaria, drug reaction, melanoma, basal/squamous cell carcinoma)\n3. Distribution pattern analysis (dermatomal, sun-exposed, flexural, extensor, generalized)\n4. ABCDE criteria evaluation if pigmented lesion (Asymmetry, Border, Color, Diameter, Evolution)\n5. Diagnostic steps (KOH prep, Wood's lamp, patch testing, skin biopsy, dermatoscopy)\n6. Immediate concerns (Stevens-Johnson syndrome, necrotizing fasciitis, anaphylaxis/urticaria)\n7. Topical vs systemic treatment approach"
+    },
+    {
+      "id": "action_systemic_workup",
+      "type": "action",
+      "label": "Systemic / Infectious Workup",
+      "description": "Copilot generates a systemic and infectious disease diagnostic plan",
+      "position": {
+        "x": 5790,
+        "y": 862.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Patient: {{demographics}}\nVitals: {{vitalSigns}}\nPrimary Symptom: {{primarySymptom}}\nPain: {{painScale}}/10\nDuration: {{symptomDuration}}\nAssociated Symptoms: {{associatedSymptoms}}\nMedical History: {{medicalHistory}}\nLifestyle: {{lifestyleFactors}} (travel history important)\nNKDA: {{noDrugAllergies}}\n\nAs a clinical decision support system, generate a systemic/infectious workup:\n1. Top differentials for constitutional symptoms (infection, malignancy, autoimmune, endocrine, hematologic)\n2. Fever workup (blood cultures x2, UA/UCx, CXR, CBC with differential, CRP/ESR/procalcitonin)\n3. Fatigue workup (TSH, CBC, CMP, iron studies, B12/folate, cortisol, HIV, mono spot)\n4. Weight loss workup (CT chest/abdomen/pelvis, age-appropriate cancer screening, A1c, TSH)\n5. SIRS/sepsis criteria evaluation (temp >38.3°C or <36°C, HR >90, RR >20, WBC >12k or <4k)\n6. Infection control and isolation considerations\n7. Empiric therapy if sepsis suspected (blood cultures → broad spectrum antibiotics within 1 hour)"
+    },
+    {
+      "id": "action_emergency_protocol",
+      "type": "action",
+      "label": "Emergency Triage Protocol",
+      "description": "Copilot generates immediate stabilization and emergency management steps",
+      "position": {
+        "x": 6750,
+        "y": 478.75
+      },
+      "actionType": "copilot_prompt",
+      "template": "EMERGENCY PRESENTATION\nPatient: {{demographics}}\nVitals: {{vitalSigns}}\nPrimary Symptom: {{primarySymptom}}\nPain: {{painScale}}/10\nOnset: {{symptomDuration}}\nAssociated: {{associatedSymptoms}}\nHistory: {{medicalHistory}}\nAllergies: {{noDrugAllergies}}\n\nAs an emergency clinical decision support system, provide immediate management:\n1. ABC assessment and stabilization priorities\n2. Immediate interventions (IV access, O2, cardiac monitoring, fluid resuscitation)\n3. STAT diagnostic orders (ECG, troponin, CBC, BMP, lactate, type & screen, ABG)\n4. Time-critical diagnoses to rule out (STEMI, stroke, PE, aortic dissection, tension pneumothorax, sepsis, anaphylaxis)\n5. Medication orders (with dose, route, frequency) for stabilization\n6. Disposition recommendation (resuscitation bay, ICU, monitored bed, observation)\n7. Specialist activation triggers (cath lab, neurology, surgery, trauma)"
+    },
+    {
+      "id": "action_pain_management",
+      "type": "action",
+      "label": "Pain Management Protocol",
+      "description": "Copilot generates a pain management plan prior to full diagnostic workup",
+      "position": {
+        "x": 5150,
+        "y": 2546.25
+      },
+      "actionType": "copilot_prompt",
+      "template": "Patient: {{demographics}}\nPain: {{painScale}}/10\nLocation: {{primarySymptom}}\nDuration: {{symptomDuration}}\nMedical History: {{medicalHistory}}\nAllergies: {{noDrugAllergies}}\nMedication Compliance: {{medicationCompliance}}\n\nAs a clinical decision support system, generate a pain management protocol:\n1. Pain classification (nociceptive, neuropathic, visceral, somatic, mixed)\n2. WHO pain ladder positioning (non-opioid → weak opioid → strong opioid)\n3. First-line recommendations with doses (acetaminophen, NSAIDs, gabapentinoids)\n4. Contraindication check based on history (renal disease → avoid NSAIDs, liver disease → cautious acetaminophen)\n5. Non-pharmacological adjuncts (ice/heat, positioning, distraction, nerve blocks)\n6. Reassessment timeline (30 min for IV, 60 min for PO)\n7. Opioid risk assessment if escalation needed (PDMP check, risk factors)"
+    },
+    {
+      "id": "action_additional_workup",
+      "type": "action",
+      "label": "Additional Diagnostic Workup",
+      "description": "Copilot recommends further testing when initial assessment is inconclusive",
+      "position": {
+        "x": 6110,
+        "y": 1755
+      },
+      "actionType": "copilot_prompt",
+      "template": "Patient: {{demographics}}\nPrimary Symptom: {{primarySymptom}}\nInitial Assessment: Inconclusive — additional testing needed\nVitals: {{vitalSigns}}\nDuration: {{symptomDuration}}\nAssociated Symptoms: {{associatedSymptoms}}\nMedical History: {{medicalHistory}}\n\nThe initial diagnostic workup did not yield a definitive diagnosis. Recommend additional testing:\n1. Second-tier laboratory tests specific to the symptom system\n2. Advanced imaging recommendations (MRI, CT with contrast, nuclear medicine, angiography)\n3. Specialty-specific tests (EEG, EMG/NCS, endoscopy, bronchoscopy, echocardiography)\n4. Biomarker panels for specific conditions\n5. Consider atypical presentations and rare diagnoses\n6. Timeline for results and interim management\n7. Criteria that would trigger specialist referral vs continued primary care workup"
+    },
+    {
+      "id": "action_lab_interpretation",
+      "type": "action",
+      "label": "Lab Results Interpretation",
+      "description": "Copilot interprets laboratory results in the context of the clinical presentation",
+      "position": {
+        "x": 6430,
+        "y": 887.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Patient: {{demographics}}\nPrimary Symptom: {{primarySymptom}}\nDuration: {{symptomDuration}}\nMedical History: {{medicalHistory}}\nVitals: {{vitalSigns}}\n\nLab results are now available. Interpret findings in clinical context:\n1. Flag critical values requiring immediate action (potassium >6.0, troponin elevation, lactate >4, WBC extremes, glucose <40 or >500)\n2. Pattern recognition across multiple lab values (anion gap metabolic acidosis, DIC panel, hepatocellular vs cholestatic LFT pattern)\n3. Correlate lab findings with clinical presentation\n4. Identify the most likely diagnosis supported by lab evidence\n5. Recommend any confirmatory tests needed\n6. Suggest whether imaging is now indicated based on lab results\n7. Medication adjustments based on renal/hepatic function"
+    },
+    {
+      "id": "action_imaging_review",
+      "type": "action",
+      "label": "Imaging Review & Analysis",
+      "description": "Copilot interprets imaging findings in clinical context",
+      "position": {
+        "x": 6750,
+        "y": 1571.25
+      },
+      "actionType": "copilot_prompt",
+      "template": "Patient: {{demographics}}\nPrimary Symptom: {{primarySymptom}}\nMedical History: {{medicalHistory}}\nClinical Image/Prior Imaging: {{clinicalImage}}\n\nImaging results are available. Provide clinical interpretation:\n1. Key findings to look for based on the clinical presentation\n2. Normal vs abnormal findings with clinical significance\n3. Incidental findings that may need follow-up\n4. Correlation with lab results and physical exam\n5. Whether the imaging confirms, narrows, or changes the differential\n6. Recommendation for additional imaging if needed (contrast study, different modality, follow-up interval)\n7. Radiological-pathological correlation and next diagnostic steps"
+    },
+    {
+      "id": "action_treatment_plan",
+      "type": "action",
+      "label": "Treatment Plan Generation",
+      "description": "Copilot generates a comprehensive treatment plan based on the confirmed diagnosis",
+      "position": {
+        "x": 7070,
+        "y": 1500
+      },
+      "actionType": "copilot_prompt",
+      "template": "Patient: {{demographics}}\nDiagnosis confirmed via clinical workup\nPrimary Symptom: {{primarySymptom}}\nMedical History: {{medicalHistory}}\nAllergies: {{noDrugAllergies}}\nMedication Compliance: {{medicationCompliance}}\nLifestyle: {{lifestyleFactors}}\n\nGenerate a comprehensive treatment plan:\n1. First-line pharmacotherapy with specific drugs, doses, routes, and duration\n2. Drug interaction check against current medications\n3. Monitoring parameters (labs to recheck, frequency, target values)\n4. Patient education and counseling points\n5. Activity modifications and restrictions\n6. Diet and lifestyle recommendations\n7. Follow-up timeline and what to monitor\n8. Warning signs that should prompt return to care\n9. Expected recovery timeline and prognosis"
+    },
+    {
+      "id": "action_chronic_management",
+      "type": "action",
+      "label": "Chronic Disease Management",
+      "description": "Copilot generates a long-term management plan for chronic or recurring conditions",
+      "position": {
+        "x": 7070,
+        "y": 253.75
+      },
+      "actionType": "copilot_prompt",
+      "template": "Patient: {{demographics}}\nChronic/Recurring Condition\nPrimary Symptom: {{primarySymptom}}\nDuration Pattern: {{symptomDuration}}\nMedical History: {{medicalHistory}}\nCurrent Medications: (from history)\nLifestyle: {{lifestyleFactors}}\nMedication Compliance: {{medicationCompliance}}\n\nGenerate a chronic disease management plan:\n1. Disease staging and current severity assessment\n2. Guideline-concordant therapy (ACC/AHA, ADA, GINA, ACR as applicable)\n3. Medication optimization (titration targets, combination therapy thresholds)\n4. Self-management education (symptom diary, home monitoring, action plans)\n5. Lifestyle modification goals (SMART format: Specific, Measurable, Achievable, Relevant, Time-bound)\n6. Screening for complications and comorbidities\n7. Multidisciplinary team coordination (PCP, specialist, dietitian, physical therapist, mental health)\n8. Quality-of-life assessment and goals\n9. Annual review checklist and preventive care integration"
+    },
+    {
+      "id": "action_medication_review",
+      "type": "action",
+      "label": "Medication Interaction Review",
+      "description": "Copilot reviews medications for interactions, contraindications, and optimization",
+      "position": {
+        "x": 7390,
+        "y": 2223.75
+      },
+      "actionType": "copilot_prompt",
+      "template": "Patient: {{demographics}}\nMedical History & Current Medications: {{medicalHistory}}\nAllergies: {{noDrugAllergies}}\nPrimary Symptom: {{primarySymptom}}\nReported Side Effect or Interaction Concern\n\nPerform a comprehensive medication review:\n1. Drug-drug interaction check (major, moderate, minor) with clinical significance\n2. Drug-disease contraindication check\n3. Drug-allergy cross-reactivity assessment\n4. Renal/hepatic dose adjustments needed\n5. Therapeutic duplication identification\n6. Deprescribing opportunities (PIMs per Beers criteria if elderly)\n7. Generic substitution options for cost savings\n8. Recommended medication changes with rationale\n9. Monitoring plan for any adjusted medications"
+    },
+    {
+      "id": "action_allergy_assessment",
+      "type": "action",
+      "label": "Drug Allergy Assessment",
+      "description": "Copilot evaluates reported drug allergy and recommends safe alternatives",
+      "position": {
+        "x": 7710,
+        "y": 2101.25
+      },
+      "actionType": "copilot_prompt",
+      "template": "Patient: {{demographics}}\nReported Drug Allergy/Adverse Reaction\nMedical History: {{medicalHistory}}\nAllergy Status: {{noDrugAllergies}}\nPrimary Symptom: {{primarySymptom}}\n\nEvaluate the reported drug allergy:\n1. Classify reaction type (IgE-mediated, delayed hypersensitivity, intolerance, side effect vs true allergy)\n2. Cross-reactivity assessment (e.g., penicillin → cephalosporin risk ~1-2%)\n3. Safe alternative medications with equivalent efficacy\n4. Whether allergy testing (skin prick, intradermal, oral challenge) is recommended\n5. Graded challenge protocol if benefit outweighs risk\n6. Allergy documentation update recommendations\n7. Emergency preparedness if rechallenge is attempted"
+    },
+    {
+      "id": "action_reassessment",
+      "type": "action",
+      "label": "Clinical Reassessment",
+      "description": "Copilot performs a clinical reassessment when initial treatment is not effective",
+      "position": {
+        "x": 7390,
+        "y": 377.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Patient: {{demographics}}\nOriginal Symptom: {{primarySymptom}}\nTreatment Attempted: (initial plan was implemented but patient not improving)\nVitals: {{vitalSigns}}\nDuration Since Treatment: {{symptomDuration}}\nAssociated Symptoms: {{associatedSymptoms}}\nMedical History: {{medicalHistory}}\n\nThe patient is not responding to initial treatment. Perform a reassessment:\n1. Re-evaluate the original diagnosis — was it correct?\n2. Consider diagnoses that were initially lower on the differential\n3. Assess for treatment failure causes (wrong diagnosis, inadequate dose, resistance, compliance)\n4. New or evolving symptoms that change the differential\n5. Complications of the original condition\n6. Iatrogenic causes (treatment side effects, hospital-acquired infection)\n7. Threshold for escalation to specialist or emergency care\n8. Updated diagnostic and treatment plan"
+    },
+    {
+      "id": "action_mental_health_screen",
+      "type": "action",
+      "label": "Mental Health Screening",
+      "description": "Copilot screens for mental health comorbidities that may affect physical symptoms",
+      "position": {
+        "x": 7710,
+        "y": 203.75
+      },
+      "actionType": "copilot_prompt",
+      "template": "Patient: {{demographics}}\nPrimary Symptom: {{primarySymptom}}\nLifestyle: {{lifestyleFactors}}\nAssociated Symptoms: {{associatedSymptoms}}\nMedical History: {{medicalHistory}}\n\nScreen for mental health comorbidities:\n1. PHQ-9 screening questions for depression (score interpretation)\n2. GAD-7 screening questions for anxiety\n3. Assessment for somatization (physical symptoms driven by psychological distress)\n4. Sleep quality assessment (insomnia, sleep apnea, circadian disruption)\n5. Substance use screening (AUDIT-C for alcohol, DAST-10 for drugs)\n6. Psychosocial stressors (work, relationships, financial, grief)\n7. Safety assessment (suicidal ideation — Columbia Protocol if positive)\n8. Recommendation: self-management, therapy referral, psychiatric referral, or crisis intervention"
+    },
+    {
+      "id": "action_preventive_guidance",
+      "type": "action",
+      "label": "Preventive Care Guidance",
+      "description": "Copilot provides preventive care recommendations based on age, sex, and risk factors",
+      "position": {
+        "x": 7390,
+        "y": 101.25
+      },
+      "actionType": "copilot_prompt",
+      "template": "Patient: {{demographics}}\nMedical History: {{medicalHistory}}\nLifestyle: {{lifestyleFactors}}\nResolved/Managed Condition: {{primarySymptom}}\n\nThe acute concern has been addressed. Provide preventive care guidance:\n1. Age and sex-appropriate cancer screenings due (USPSTF guidelines)\n2. Immunization updates needed (CDC schedule)\n3. Cardiovascular risk assessment (ASCVD 10-year risk, lipid panel, A1c)\n4. Lifestyle modification priorities (ranked by impact on overall health)\n5. Mental health and well-being check-in\n6. Anticipatory guidance for the resolved condition (recurrence prevention)\n7. Recommended follow-up appointments and timeline\n8. Health maintenance checklist for the next 12 months"
+    },
+    {
+      "id": "action_specialist_referral",
+      "type": "action",
+      "label": "Specialist Referral",
+      "description": "Terminal — generates a specialist referral recommendation with handoff summary",
+      "position": {
+        "x": 8030,
+        "y": 1740
+      },
+      "actionType": "copilot_prompt",
+      "template": "Patient: {{demographics}}\nPrimary Symptom: {{primarySymptom}}\nDuration: {{symptomDuration}}\nVitals: {{vitalSigns}}\nPain: {{painScale}}/10\nMedical History: {{medicalHistory}}\nWorkup Completed: Initial assessment and available diagnostics\nReason for Referral: Complexity exceeds primary care scope or diagnosis remains unclear\n\nGenerate a specialist referral:\n1. Recommended specialty (cardiology, neurology, GI, pulmonology, orthopedics, dermatology, rheumatology, endocrinology, oncology, psychiatry, pain management)\n2. Urgency classification (emergent, urgent <1 week, soon <1 month, routine)\n3. Clinical summary for the specialist (concise HPI, pertinent positives/negatives, workup done, working diagnosis)\n4. Specific questions for the specialist to address\n5. Interim management plan while awaiting consultation\n6. Patient preparation instructions\n7. What to do if symptoms worsen before the appointment"
+    },
+    {
+      "id": "action_resolved",
+      "type": "action",
+      "label": "✅ Case Resolved",
+      "description": "Terminal — the clinical concern has been addressed and the patient is on a clear management path",
+      "position": {
+        "x": 8030,
+        "y": 30
+      },
+      "actionType": "copilot_prompt",
+      "template": "Patient: {{demographics}}\nPresenting Symptom: {{primarySymptom}}\nOutcome: Clinical concern addressed\nManagement Plan: In place\n\nGenerate a discharge/visit summary:\n1. Final diagnosis or working diagnosis\n2. Treatment plan summary\n3. Medications prescribed (with patient-friendly instructions)\n4. Follow-up appointments scheduled\n5. Warning signs that should trigger return to care\n6. Patient education resources\n7. Lifestyle recommendations\n8. Expected recovery timeline"
+    },
+    {
+      "id": "action_escalate_er",
+      "type": "action",
+      "label": "🚨 Emergency Escalation",
+      "description": "Terminal — patient requires immediate emergency department transfer or higher level of care",
+      "position": {
+        "x": 7070,
+        "y": 478.75
+      },
+      "actionType": "copilot_prompt",
+      "template": "CRITICAL ESCALATION\nPatient: {{demographics}}\nVitals: {{vitalSigns}}\nPresenting Symptom: {{primarySymptom}}\nPain: {{painScale}}/10\nMedical History: {{medicalHistory}}\nAllergies: {{noDrugAllergies}}\n\nPatient requires emergency department transfer. Generate handoff:\n1. SBAR handoff (Situation, Background, Assessment, Recommendation)\n2. Interventions already performed\n3. Current medications and IV access status\n4. Last set of vital signs and trend\n5. Pending labs or imaging results\n6. Anticipated specialist needs (surgery, ICU, cath lab, interventional radiology)\n7. Transport requirements (BLS vs ALS, monitoring during transport)\n8. Family notification status"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_symptom_to_duration",
+      "source": "input_primary_symptom",
+      "target": "input_duration"
+    },
+    {
+      "id": "e_duration_to_demographics",
+      "source": "input_duration",
+      "target": "input_demographics"
+    },
+    {
+      "id": "e_demographics_to_pain",
+      "source": "input_demographics",
+      "target": "input_pain_scale"
+    },
+    {
+      "id": "e_pain_to_vitals",
+      "source": "input_pain_scale",
+      "target": "input_vitals"
+    },
+    {
+      "id": "e_vitals_to_history",
+      "source": "input_vitals",
+      "target": "input_history"
+    },
+    {
+      "id": "e_history_to_associated",
+      "source": "input_history",
+      "target": "input_associated"
+    },
+    {
+      "id": "e_associated_to_lifestyle",
+      "source": "input_associated",
+      "target": "input_lifestyle"
+    },
+    {
+      "id": "e_lifestyle_to_image",
+      "source": "input_lifestyle",
+      "target": "input_image_upload"
+    },
+    {
+      "id": "e_image_to_threat",
+      "source": "input_image_upload",
+      "target": "assumption_no_immediate_threat"
+    },
+    {
+      "id": "e_threat_to_compliance",
+      "source": "assumption_no_immediate_threat",
+      "target": "assumption_medication_compliance"
+    },
+    {
+      "id": "e_compliance_to_reporting",
+      "source": "assumption_medication_compliance",
+      "target": "assumption_accurate_reporting"
+    },
+    {
+      "id": "e_reporting_to_allergies",
+      "source": "assumption_accurate_reporting",
+      "target": "assumption_no_drug_allergies"
+    },
+    {
+      "id": "e_allergies_to_triage",
+      "source": "assumption_no_drug_allergies",
+      "target": "decision_urgency_triage"
+    },
+    {
+      "id": "e_triage_emergency",
+      "source": "decision_urgency_triage",
+      "target": "action_emergency_protocol",
+      "label": "Emergency — life-threatening signs"
+    },
+    {
+      "id": "e_triage_urgent",
+      "source": "decision_urgency_triage",
+      "target": "decision_red_flags",
+      "label": "Urgent — significant concern"
+    },
+    {
+      "id": "e_triage_routine",
+      "source": "decision_urgency_triage",
+      "target": "decision_age_risk",
+      "label": "Routine — standard evaluation"
+    },
+    {
+      "id": "e_redflags_yes",
+      "source": "decision_red_flags",
+      "target": "action_emergency_protocol",
+      "label": "Red Flags Present — escalate immediately"
+    },
+    {
+      "id": "e_redflags_no",
+      "source": "decision_red_flags",
+      "target": "decision_age_risk",
+      "label": "No Red Flags — continue evaluation"
+    },
+    {
+      "id": "e_agerisk_high_pain",
+      "source": "decision_age_risk",
+      "target": "action_pain_management",
+      "label": "High Pain (≥7/10) — manage pain first"
+    },
+    {
+      "id": "e_agerisk_standard",
+      "source": "decision_age_risk",
+      "target": "decision_system_route",
+      "label": "Standard Path — proceed to workup"
+    },
+    {
+      "id": "e_pain_controlled",
+      "source": "action_pain_management",
+      "target": "decision_system_route",
+      "label": "✓ Pain Controlled — Continue Workup"
+    },
+    {
+      "id": "e_pain_refractory",
+      "source": "action_pain_management",
+      "target": "action_specialist_referral",
+      "label": "✗ Refractory Pain — Refer to Pain Specialist"
+    },
+    {
+      "id": "e_route_cardiac",
+      "source": "decision_system_route",
+      "target": "action_cardiac_workup",
+      "label": "Chest / Cardiovascular"
+    },
+    {
+      "id": "e_route_neuro",
+      "source": "decision_system_route",
+      "target": "action_neuro_assessment",
+      "label": "Neurological"
+    },
+    {
+      "id": "e_route_gi",
+      "source": "decision_system_route",
+      "target": "action_gi_differential",
+      "label": "Gastrointestinal"
+    },
+    {
+      "id": "e_route_respiratory",
+      "source": "decision_system_route",
+      "target": "action_respiratory_eval",
+      "label": "Respiratory"
+    },
+    {
+      "id": "e_route_msk",
+      "source": "decision_system_route",
+      "target": "action_msk_assessment",
+      "label": "Musculoskeletal"
+    },
+    {
+      "id": "e_route_derm",
+      "source": "decision_system_route",
+      "target": "action_derm_differential",
+      "label": "Dermatological"
+    },
+    {
+      "id": "e_route_systemic",
+      "source": "decision_system_route",
+      "target": "action_systemic_workup",
+      "label": "General / Systemic"
+    },
+    {
+      "id": "e_cardiac_confirmed",
+      "source": "action_cardiac_workup",
+      "target": "decision_chronic_vs_acute",
+      "label": "✓ Diagnosis Confirmed"
+    },
+    {
+      "id": "e_cardiac_more_tests",
+      "source": "action_cardiac_workup",
+      "target": "action_additional_workup",
+      "label": "? Need More Tests"
+    },
+    {
+      "id": "e_cardiac_refer",
+      "source": "action_cardiac_workup",
+      "target": "action_specialist_referral",
+      "label": "✗ Refer to Cardiology"
+    },
+    {
+      "id": "e_neuro_confirmed",
+      "source": "action_neuro_assessment",
+      "target": "decision_chronic_vs_acute",
+      "label": "✓ Diagnosis Confirmed"
+    },
+    {
+      "id": "e_neuro_more_tests",
+      "source": "action_neuro_assessment",
+      "target": "action_additional_workup",
+      "label": "? Need More Tests"
+    },
+    {
+      "id": "e_neuro_refer",
+      "source": "action_neuro_assessment",
+      "target": "action_specialist_referral",
+      "label": "✗ Refer to Neurology"
+    },
+    {
+      "id": "e_gi_confirmed",
+      "source": "action_gi_differential",
+      "target": "decision_chronic_vs_acute",
+      "label": "✓ Diagnosis Confirmed"
+    },
+    {
+      "id": "e_gi_more_tests",
+      "source": "action_gi_differential",
+      "target": "action_additional_workup",
+      "label": "? Need More Tests"
+    },
+    {
+      "id": "e_gi_refer",
+      "source": "action_gi_differential",
+      "target": "action_specialist_referral",
+      "label": "✗ Refer to Gastroenterology"
+    },
+    {
+      "id": "e_resp_confirmed",
+      "source": "action_respiratory_eval",
+      "target": "decision_chronic_vs_acute",
+      "label": "✓ Diagnosis Confirmed"
+    },
+    {
+      "id": "e_resp_more_tests",
+      "source": "action_respiratory_eval",
+      "target": "action_additional_workup",
+      "label": "? Need More Tests"
+    },
+    {
+      "id": "e_resp_refer",
+      "source": "action_respiratory_eval",
+      "target": "action_specialist_referral",
+      "label": "✗ Refer to Pulmonology"
+    },
+    {
+      "id": "e_msk_confirmed",
+      "source": "action_msk_assessment",
+      "target": "decision_chronic_vs_acute",
+      "label": "✓ Diagnosis Confirmed"
+    },
+    {
+      "id": "e_msk_more_tests",
+      "source": "action_msk_assessment",
+      "target": "action_additional_workup",
+      "label": "? Need More Tests"
+    },
+    {
+      "id": "e_msk_refer",
+      "source": "action_msk_assessment",
+      "target": "action_specialist_referral",
+      "label": "✗ Refer to Orthopedics / Rheumatology"
+    },
+    {
+      "id": "e_derm_confirmed",
+      "source": "action_derm_differential",
+      "target": "decision_chronic_vs_acute",
+      "label": "✓ Diagnosis Confirmed"
+    },
+    {
+      "id": "e_derm_more_tests",
+      "source": "action_derm_differential",
+      "target": "action_additional_workup",
+      "label": "? Need More Tests"
+    },
+    {
+      "id": "e_derm_refer",
+      "source": "action_derm_differential",
+      "target": "action_specialist_referral",
+      "label": "✗ Refer to Dermatology"
+    },
+    {
+      "id": "e_systemic_confirmed",
+      "source": "action_systemic_workup",
+      "target": "decision_chronic_vs_acute",
+      "label": "✓ Diagnosis Confirmed"
+    },
+    {
+      "id": "e_systemic_more_tests",
+      "source": "action_systemic_workup",
+      "target": "action_additional_workup",
+      "label": "? Need More Tests"
+    },
+    {
+      "id": "e_systemic_refer",
+      "source": "action_systemic_workup",
+      "target": "action_specialist_referral",
+      "label": "✗ Refer to Specialist"
+    },
+    {
+      "id": "e_chronic_acute",
+      "source": "decision_chronic_vs_acute",
+      "target": "action_treatment_plan",
+      "label": "Acute Episode — treat and resolve"
+    },
+    {
+      "id": "e_chronic_chronic",
+      "source": "decision_chronic_vs_acute",
+      "target": "action_chronic_management",
+      "label": "Chronic Condition — long-term plan"
+    },
+    {
+      "id": "e_treatment_improving",
+      "source": "action_treatment_plan",
+      "target": "action_preventive_guidance",
+      "label": "✓ Patient Improving"
+    },
+    {
+      "id": "e_treatment_side_effects",
+      "source": "action_treatment_plan",
+      "target": "action_medication_review",
+      "label": "⚠ Side Effects / Interactions"
+    },
+    {
+      "id": "e_treatment_not_improving",
+      "source": "action_treatment_plan",
+      "target": "action_reassessment",
+      "label": "✗ Not Improving"
+    },
+    {
+      "id": "e_chronic_stable",
+      "source": "action_chronic_management",
+      "target": "action_preventive_guidance",
+      "label": "✓ Condition Stable"
+    },
+    {
+      "id": "e_chronic_worsening",
+      "source": "action_chronic_management",
+      "target": "action_reassessment",
+      "label": "✗ Condition Worsening"
+    },
+    {
+      "id": "e_workup_labs",
+      "source": "action_additional_workup",
+      "target": "action_lab_interpretation",
+      "label": "✓ Lab Results Available"
+    },
+    {
+      "id": "e_workup_imaging",
+      "source": "action_additional_workup",
+      "target": "action_imaging_review",
+      "label": "📷 Imaging Ordered"
+    },
+    {
+      "id": "e_workup_unable",
+      "source": "action_additional_workup",
+      "target": "action_specialist_referral",
+      "label": "✗ Unable to Determine — Refer"
+    },
+    {
+      "id": "e_labs_clear",
+      "source": "action_lab_interpretation",
+      "target": "action_treatment_plan",
+      "label": "✓ Clear Diagnosis from Labs"
+    },
+    {
+      "id": "e_labs_need_imaging",
+      "source": "action_lab_interpretation",
+      "target": "action_imaging_review",
+      "label": "? Need Imaging Confirmation"
+    },
+    {
+      "id": "e_labs_abnormal_refer",
+      "source": "action_lab_interpretation",
+      "target": "action_specialist_referral",
+      "label": "✗ Critically Abnormal — Refer"
+    },
+    {
+      "id": "e_imaging_found",
+      "source": "action_imaging_review",
+      "target": "action_treatment_plan",
+      "label": "✓ Findings Identified — Diagnosis Clear"
+    },
+    {
+      "id": "e_imaging_inconclusive",
+      "source": "action_imaging_review",
+      "target": "action_specialist_referral",
+      "label": "✗ Inconclusive — Refer for Advanced Imaging"
+    },
+    {
+      "id": "e_medsreview_adjusted",
+      "source": "action_medication_review",
+      "target": "action_treatment_plan",
+      "label": "✓ Medication Adjusted Successfully"
+    },
+    {
+      "id": "e_medsreview_allergy",
+      "source": "action_medication_review",
+      "target": "action_allergy_assessment",
+      "label": "⚠ Possible Drug Allergy"
+    },
+    {
+      "id": "e_medsreview_complex",
+      "source": "action_medication_review",
+      "target": "action_specialist_referral",
+      "label": "✗ Complex Polypharmacy — Refer"
+    },
+    {
+      "id": "e_allergy_alternative",
+      "source": "action_allergy_assessment",
+      "target": "action_treatment_plan",
+      "label": "✓ Safe Alternative Found"
+    },
+    {
+      "id": "e_allergy_no_alternative",
+      "source": "action_allergy_assessment",
+      "target": "action_specialist_referral",
+      "label": "✗ No Safe Alternative — Refer Allergist"
+    },
+    {
+      "id": "e_reassess_new_dx",
+      "source": "action_reassessment",
+      "target": "action_treatment_plan",
+      "label": "✓ New Diagnosis Found"
+    },
+    {
+      "id": "e_reassess_escalate",
+      "source": "action_reassessment",
+      "target": "action_specialist_referral",
+      "label": "✗ Escalate to Specialist"
+    },
+    {
+      "id": "e_reassess_emergency",
+      "source": "action_reassessment",
+      "target": "action_emergency_protocol",
+      "label": "🚨 Acute Deterioration — Emergency"
+    },
+    {
+      "id": "e_emergency_stabilized",
+      "source": "action_emergency_protocol",
+      "target": "action_treatment_plan",
+      "label": "✓ Patient Stabilized"
+    },
+    {
+      "id": "e_emergency_transfer",
+      "source": "action_emergency_protocol",
+      "target": "action_escalate_er",
+      "label": "✗ Transfer to Emergency Department"
+    },
+    {
+      "id": "e_preventive_complete",
+      "source": "action_preventive_guidance",
+      "target": "action_resolved",
+      "label": "✓ Case Complete — Follow-up Scheduled"
+    },
+    {
+      "id": "e_preventive_mental_health",
+      "source": "action_preventive_guidance",
+      "target": "action_mental_health_screen",
+      "label": "⚕ Screen for Mental Health"
+    },
+    {
+      "id": "e_mental_no_concerns",
+      "source": "action_mental_health_screen",
+      "target": "action_resolved",
+      "label": "✓ No Mental Health Concerns"
+    },
+    {
+      "id": "e_mental_refer",
+      "source": "action_mental_health_screen",
+      "target": "action_specialist_referral",
+      "label": "⚕ Refer to Psychiatry / Therapy"
+    }
+  ]
+}

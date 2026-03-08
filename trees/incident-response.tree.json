@@ -1,0 +1,916 @@
+{
+  "id": "incident-response",
+  "name": "Production Incident Response",
+  "description": "Guides SRE/DevOps teams through structured incident response — from initial triage through root cause analysis and post-mortem",
+  "version": "1.0.0",
+  "rootNodeId": "input_alert",
+  "tags": [
+    "sre",
+    "incident",
+    "devops",
+    "on-call",
+    "reliability"
+  ],
+  "createdAt": "2026-03-04T00:00:00Z",
+  "updatedAt": "2026-03-08T04:49:51.825Z",
+  "defaultWeights": [
+    {
+      "id": "severityBias",
+      "label": "Severity Bias",
+      "description": "How aggressively to escalate — high treats every incident as critical, low triages carefully",
+      "value": 60,
+      "color": "#FF6B6B",
+      "icon": "🚨"
+    },
+    {
+      "id": "costOfDowntime",
+      "label": "Cost of Downtime",
+      "description": "Business impact of outage duration — high justifies expensive fixes, low manages expectations",
+      "value": 70,
+      "color": "#4ECDC4",
+      "icon": "💰"
+    },
+    {
+      "id": "rootCauseDepth",
+      "label": "Root Cause Depth",
+      "description": "How deep to investigate root cause — high finds systemic issues, low fixes symptoms",
+      "value": 55,
+      "color": "#45B7D1",
+      "icon": "🔬"
+    },
+    {
+      "id": "blastRadius",
+      "label": "Blast Radius",
+      "description": "Concern for wider system impact — high checks all dependencies, low focuses on affected service",
+      "value": 65,
+      "color": "#96CEB4",
+      "icon": "💥"
+    },
+    {
+      "id": "recoverySpeed",
+      "label": "Recovery Speed",
+      "description": "Time-to-recovery pressure — high rolls back fast, low diagnoses before acting",
+      "value": 50,
+      "color": "#FFEAA7",
+      "icon": "⏱️"
+    },
+    {
+      "id": "communicationLevel",
+      "label": "Communication Level",
+      "description": "Stakeholder communication frequency — high updates constantly, low updates at milestones",
+      "value": 50,
+      "color": "#DDA0DD",
+      "icon": "📢"
+    },
+    {
+      "id": "changeFreeze",
+      "label": "Change Freeze",
+      "description": "Post-incident caution — high enforces long freeze, low resumes deploys quickly",
+      "value": 60,
+      "color": "#F0E68C",
+      "icon": "🔒"
+    },
+    {
+      "id": "automationTrust",
+      "label": "Automation Trust",
+      "description": "Trust in automated remediation — high auto-heals, low requires human approval",
+      "value": 45,
+      "color": "#87CEEB",
+      "icon": "🤖"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "input_alert",
+      "type": "input",
+      "label": "Alert Source & Signal",
+      "description": "Where did the alert originate and what signal triggered it",
+      "position": {
+        "x": 30,
+        "y": 455
+      },
+      "prompt": "What triggered this incident?",
+      "variableName": "alertSource",
+      "inputType": "choice",
+      "choices": [
+        "PagerDuty / OpsGenie alert — automated monitoring threshold breached",
+        "Customer report — support tickets or social media reports of issues",
+        "Internal discovery — engineer noticed during routine work",
+        "Synthetic monitor — uptime check or canary failure",
+        "Dependency notification — upstream provider status page or email",
+        "Security alert — IDS/SIEM triggered, suspicious activity detected"
+      ]
+    },
+    {
+      "id": "input_severity",
+      "type": "input",
+      "label": "Initial Severity Estimate",
+      "description": "First responder's gut-level severity assessment",
+      "position": {
+        "x": 390,
+        "y": 455
+      },
+      "prompt": "What's your initial severity estimate?",
+      "variableName": "initialSeverity",
+      "inputType": "choice",
+      "choices": [
+        "SEV-1 — Complete outage, all users affected, revenue impact",
+        "SEV-2 — Major degradation, significant user impact, SLA at risk",
+        "SEV-3 — Partial degradation, subset of users affected",
+        "SEV-4 — Minor issue, workaround available, low user impact",
+        "Unknown — Not enough information to classify yet"
+      ]
+    },
+    {
+      "id": "input_affected_service",
+      "type": "input",
+      "label": "Affected Service",
+      "description": "Which service or system is experiencing the issue",
+      "position": {
+        "x": 750,
+        "y": 455
+      },
+      "prompt": "Which service or system is affected? (e.g., 'payments-api', 'user-auth', 'CDN edge', 'database-primary')",
+      "variableName": "affectedService",
+      "inputType": "text"
+    },
+    {
+      "id": "input_environment",
+      "type": "input",
+      "label": "Environment & Region",
+      "description": "Which environment and geographic region is impacted",
+      "position": {
+        "x": 1110,
+        "y": 455
+      },
+      "prompt": "Which environment and region?",
+      "variableName": "environment",
+      "inputType": "choice",
+      "choices": [
+        "Production — all regions",
+        "Production — single region (us-east, eu-west, ap-southeast, etc.)",
+        "Staging / Pre-production",
+        "Production — specific availability zone",
+        "Edge / CDN layer",
+        "Shared infrastructure (DNS, load balancer, service mesh)"
+      ]
+    },
+    {
+      "id": "input_symptoms",
+      "type": "input",
+      "label": "Observable Symptoms",
+      "description": "What symptoms are users or systems experiencing",
+      "position": {
+        "x": 1470,
+        "y": 455
+      },
+      "prompt": "Describe the observable symptoms (e.g., '500 errors on /api/checkout, p99 latency >5s, connection timeouts to DB')",
+      "variableName": "symptoms",
+      "inputType": "text"
+    },
+    {
+      "id": "input_recent_changes",
+      "type": "input",
+      "label": "Recent Changes",
+      "description": "Any deployments, config changes, or infrastructure modifications in the last 24 hours",
+      "position": {
+        "x": 1830,
+        "y": 455
+      },
+      "prompt": "What changed in the last 24 hours?",
+      "variableName": "recentChanges",
+      "inputType": "choice",
+      "choices": [
+        "Code deployment — application release in last 24h",
+        "Config change — feature flag, env var, or config update",
+        "Infrastructure change — scaling, migration, cert rotation, DNS update",
+        "Dependency update — library, package, or upstream API version change",
+        "No known changes — nothing deployed or modified recently",
+        "Multiple changes — several of the above happened recently"
+      ]
+    },
+    {
+      "id": "input_architecture",
+      "type": "input",
+      "label": "System Architecture",
+      "description": "What kind of architecture does the affected system use",
+      "position": {
+        "x": 2190,
+        "y": 455
+      },
+      "prompt": "What's the architecture of the affected system?",
+      "variableName": "architecture",
+      "inputType": "choice",
+      "choices": [
+        "Monolith — single deployable unit",
+        "Microservices — distributed services communicating via API/gRPC",
+        "Serverless — Lambda/Functions/Cloud Run",
+        "Event-driven — message queues, Kafka, event bus",
+        "Hybrid — mix of monolith and microservices",
+        "Static / CDN — static site or edge-cached content"
+      ]
+    },
+    {
+      "id": "input_team_status",
+      "type": "input",
+      "label": "Team Availability",
+      "description": "Who is available to respond right now",
+      "position": {
+        "x": 2550,
+        "y": 455
+      },
+      "prompt": "Who is available to respond?",
+      "variableName": "teamStatus",
+      "inputType": "choice",
+      "choices": [
+        "On-call engineer only — solo responder, business hours",
+        "On-call engineer only — solo responder, off-hours",
+        "Small team — 2-3 engineers available",
+        "Full incident team — IC, communications lead, and engineers",
+        "Cross-team — multiple team leads available for coordination"
+      ]
+    },
+    {
+      "id": "assume_monitoring",
+      "type": "assumption",
+      "label": "Monitoring & Observability",
+      "description": "Assumes centralized logging, metrics dashboards, and distributed tracing are available",
+      "position": {
+        "x": 2910,
+        "y": 455
+      },
+      "assumption": "Centralized logging (ELK/Datadog/Splunk), metrics dashboards (Grafana/Datadog), and distributed tracing (Jaeger/Zipkin) are available and currently functioning",
+      "variableName": "monitoringExists",
+      "default": true,
+      "weightInfluence": [
+        {
+          "dimension": "rootCauseDepth",
+          "direction": "accept",
+          "strength": 0.7
+        },
+        {
+          "dimension": "recoverySpeed",
+          "direction": "accept",
+          "strength": 0.5
+        }
+      ]
+    },
+    {
+      "id": "assume_runbooks",
+      "type": "assumption",
+      "label": "Runbooks Exist",
+      "description": "Assumes documented runbooks or playbooks exist for common failure modes",
+      "position": {
+        "x": 3270,
+        "y": 455
+      },
+      "assumption": "The team has documented runbooks or playbooks for common failure modes of this service",
+      "variableName": "runbooksExist",
+      "default": true,
+      "weightInfluence": [
+        {
+          "dimension": "automationTrust",
+          "direction": "accept",
+          "strength": 0.6
+        },
+        {
+          "dimension": "recoverySpeed",
+          "direction": "accept",
+          "strength": 0.4
+        }
+      ]
+    },
+    {
+      "id": "assume_canary",
+      "type": "assumption",
+      "label": "Canary / Rollback Available",
+      "description": "Assumes canary deployments or fast rollback mechanisms are in place",
+      "position": {
+        "x": 3630,
+        "y": 455
+      },
+      "assumption": "The deployment pipeline supports canary releases or one-click rollback to the previous known-good version",
+      "variableName": "canaryAvailable",
+      "default": true,
+      "weightInfluence": [
+        {
+          "dimension": "recoverySpeed",
+          "direction": "accept",
+          "strength": 0.8
+        },
+        {
+          "dimension": "changeFreeze",
+          "direction": "reject",
+          "strength": 0.3
+        }
+      ]
+    },
+    {
+      "id": "decision_severity",
+      "type": "decision",
+      "label": "Severity Classification",
+      "description": "Classifies the incident severity based on inputs and weight profile",
+      "position": {
+        "x": 3990,
+        "y": 455
+      },
+      "condition": "What is the confirmed severity level?",
+      "evaluateExpression": "{{initialSeverity}}",
+      "weightBias": [
+        {
+          "dimension": "severityBias",
+          "favorsBranch": "Critical",
+          "strength": 0.7
+        },
+        {
+          "dimension": "costOfDowntime",
+          "favorsBranch": "Critical",
+          "strength": 0.5
+        },
+        {
+          "dimension": "blastRadius",
+          "favorsBranch": "Critical",
+          "strength": 0.4
+        }
+      ]
+    },
+    {
+      "id": "action_war_room",
+      "type": "action",
+      "label": "Open War Room",
+      "description": "For SEV-1/SEV-2: establish incident command, open bridge call, assign roles",
+      "position": {
+        "x": 4350,
+        "y": 357.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Incident: {{affectedService}} in {{environment}}. Severity: {{initialSeverity}}. Alert: {{alertSource}}. Symptoms: {{symptoms}}. Architecture: {{architecture}}. Recent changes: {{recentChanges}}. Team: {{teamStatus}}. Monitoring: {{monitoringExists}}. Runbooks: {{runbooksExist}}.",
+      "systemPrompt": "You are a senior SRE incident commander. A high-severity incident has been declared. Generate:\n1. **Incident summary** — one-paragraph situation report\n2. **Role assignments** — Incident Commander, Communications Lead, Technical Lead, Scribe\n3. **Bridge call setup** — Zoom/Slack channel naming convention, stakeholder notification template\n4. **First 5 actions** — ordered investigation steps based on the symptoms and architecture\n5. **Communication template** — first external status page update (acknowledge, impact, ETA)\n\nBe specific to the architecture type and symptoms described. Reference the weight profile."
+    },
+    {
+      "id": "action_quick_triage",
+      "type": "action",
+      "label": "Quick Triage",
+      "description": "For SEV-3/SEV-4: lightweight investigation without full war room",
+      "position": {
+        "x": 4350,
+        "y": 598.75
+      },
+      "actionType": "copilot_prompt",
+      "template": "Incident: {{affectedService}} in {{environment}}. Severity: {{initialSeverity}}. Symptoms: {{symptoms}}. Architecture: {{architecture}}. Recent changes: {{recentChanges}}. Monitoring available: {{monitoringExists}}.",
+      "systemPrompt": "You are an experienced SRE doing quick triage on a lower-severity incident. Generate:\n1. **Impact assessment** — who is affected and how\n2. **Top 3 likely causes** — based on symptoms, architecture, and recent changes\n3. **Quick diagnosis commands** — specific kubectl, AWS CLI, or log queries to run\n4. **Workaround options** — temporary mitigations while investigating\n5. **Escalation criteria** — what would bump this to SEV-2 or SEV-1\n\nBe specific to the technology stack described."
+    },
+    {
+      "id": "decision_rollback",
+      "type": "decision",
+      "label": "Rollback Decision",
+      "description": "Should we rollback immediately or investigate first?",
+      "position": {
+        "x": 4710,
+        "y": 401.25
+      },
+      "condition": "Were there recent changes that could be rolled back?",
+      "evaluateExpression": "{{recentChanges}}",
+      "weightBias": [
+        {
+          "dimension": "recoverySpeed",
+          "favorsBranch": "Rollback",
+          "strength": 0.8
+        },
+        {
+          "dimension": "rootCauseDepth",
+          "favorsBranch": "Investigate",
+          "strength": 0.6
+        },
+        {
+          "dimension": "automationTrust",
+          "favorsBranch": "Rollback",
+          "strength": 0.4
+        }
+      ]
+    },
+    {
+      "id": "action_rollback",
+      "type": "action",
+      "label": "Execute Rollback",
+      "description": "Roll back the most recent change and verify recovery",
+      "position": {
+        "x": 5070,
+        "y": 317.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Service: {{affectedService}}. Change type: {{recentChanges}}. Canary/rollback available: {{canaryAvailable}}. Architecture: {{architecture}}. Environment: {{environment}}.",
+      "systemPrompt": "You are an SRE executing an emergency rollback. Generate:\n1. **Rollback plan** — exact steps to revert the {{recentChanges}} for a {{architecture}} system\n2. **Verification checklist** — how to confirm the rollback succeeded (health checks, metrics, smoke tests)\n3. **Data safety** — any database migrations or state changes that complicate rollback\n4. **Rollback commands** — specific CLI commands or pipeline triggers\n5. **Monitoring watch points** — key metrics to watch for the next 30 minutes post-rollback\n\nConsider whether canary rollback or full rollback is appropriate."
+    },
+    {
+      "id": "decision_failure_domain",
+      "type": "decision",
+      "label": "Failure Domain",
+      "description": "Classify whether the issue is infrastructure, application, or external dependency",
+      "position": {
+        "x": 5430,
+        "y": 236.25
+      },
+      "condition": "What domain is the failure in?",
+      "evaluateExpression": "{{symptoms}}",
+      "weightBias": [
+        {
+          "dimension": "blastRadius",
+          "favorsBranch": "Infrastructure",
+          "strength": 0.5
+        },
+        {
+          "dimension": "rootCauseDepth",
+          "favorsBranch": "Application",
+          "strength": 0.4
+        }
+      ]
+    },
+    {
+      "id": "action_infra_investigation",
+      "type": "action",
+      "label": "Infrastructure Investigation",
+      "description": "Investigate infrastructure-level issues: networking, compute, storage, DNS",
+      "position": {
+        "x": 5790,
+        "y": 30
+      },
+      "actionType": "copilot_prompt",
+      "template": "Service: {{affectedService}}. Architecture: {{architecture}}. Environment: {{environment}}. Symptoms: {{symptoms}}. Monitoring: {{monitoringExists}}.",
+      "systemPrompt": "You are an infrastructure SRE investigating a potential infrastructure failure. Generate:\n1. **Network checks** — DNS resolution, connectivity tests, security group/firewall verification, MTU issues\n2. **Compute checks** — CPU/memory/disk pressure, OOM kills, instance health, auto-scaling state\n3. **Storage checks** — disk I/O, IOPS limits, storage quota, replication lag\n4. **Load balancer checks** — health check status, target group draining, certificate expiry\n5. **Specific commands** — exact `kubectl`, `aws`, `az`, or `gcloud` commands to run for each check\n6. **Correlation queries** — Grafana/Datadog queries to correlate infrastructure metrics with the incident timeline\n\nProvide commands appropriate for the {{architecture}} architecture."
+    },
+    {
+      "id": "action_app_investigation",
+      "type": "action",
+      "label": "Application Investigation",
+      "description": "Investigate application-level issues: code bugs, memory leaks, deadlocks, misconfigurations",
+      "position": {
+        "x": 6150,
+        "y": 152.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Service: {{affectedService}}. Architecture: {{architecture}}. Symptoms: {{symptoms}}. Recent changes: {{recentChanges}}. Monitoring: {{monitoringExists}}.",
+      "systemPrompt": "You are a senior developer investigating an application-level production issue. Generate:\n1. **Log analysis** — specific log queries (ELK/Splunk/CloudWatch) to find error patterns, stack traces, and rate changes\n2. **APM deep dive** — distributed trace analysis, flame graphs, slow query identification\n3. **Memory/CPU profiling** — commands to capture heap dumps, thread dumps, or CPU profiles in production\n4. **Dependency health** — database connection pool status, cache hit rates, external API response times\n5. **Code correlation** — how to identify the specific code path causing issues (git log, deploy manifest)\n6. **Reproduction steps** — safe ways to reproduce in staging or with feature flags\n\nTailor to the {{architecture}} architecture and {{recentChanges}}."
+    },
+    {
+      "id": "action_dependency_investigation",
+      "type": "action",
+      "label": "Dependency Investigation",
+      "description": "Investigate external dependency failures: third-party APIs, cloud services, CDN",
+      "position": {
+        "x": 6510,
+        "y": 275
+      },
+      "actionType": "copilot_prompt",
+      "template": "Service: {{affectedService}}. Symptoms: {{symptoms}}. Architecture: {{architecture}}. Environment: {{environment}}.",
+      "systemPrompt": "You are an SRE investigating a potential external dependency failure. Generate:\n1. **Status page check** — list of status pages to check for common cloud providers and services\n2. **Dependency mapping** — identify all upstream and downstream dependencies of {{affectedService}}\n3. **Circuit breaker status** — check if circuit breakers have tripped, retry/backoff configuration\n4. **Fallback activation** — steps to enable graceful degradation or cached responses\n5. **Provider communication** — template for opening a support case with the cloud provider\n6. **Mitigation options** — failover to backup region, switch to alternative provider, enable offline mode\n\nBe specific about the dependency architecture."
+    },
+    {
+      "id": "decision_escalation",
+      "type": "decision",
+      "label": "Escalation Level",
+      "description": "Determine if the incident needs further escalation",
+      "position": {
+        "x": 6870,
+        "y": 155
+      },
+      "condition": "Does this need escalation beyond the current responders?",
+      "evaluateExpression": "{{initialSeverity}}",
+      "weightBias": [
+        {
+          "dimension": "severityBias",
+          "favorsBranch": "Escalate",
+          "strength": 0.6
+        },
+        {
+          "dimension": "communicationLevel",
+          "favorsBranch": "Escalate",
+          "strength": 0.5
+        },
+        {
+          "dimension": "blastRadius",
+          "favorsBranch": "Escalate",
+          "strength": 0.4
+        }
+      ]
+    },
+    {
+      "id": "action_escalation",
+      "type": "action",
+      "label": "Escalate Incident",
+      "description": "Escalate to leadership, additional teams, or vendor support",
+      "position": {
+        "x": 7230,
+        "y": 86.25
+      },
+      "actionType": "copilot_prompt",
+      "template": "Incident: {{affectedService}} in {{environment}}. Severity: {{initialSeverity}}. Symptoms: {{symptoms}}. Duration so far: ongoing. Team available: {{teamStatus}}. Architecture: {{architecture}}.",
+      "systemPrompt": "You are an incident commander escalating a production incident. Generate:\n1. **Escalation summary** — concise situation report for leadership (what, when, who, impact, current actions)\n2. **Teams to page** — which teams need to be involved based on the failure domain and architecture\n3. **Customer communication** — status page update template with honest impact description and ETA guidance\n4. **Executive briefing** — 3-sentence summary suitable for VP/CTO notification\n5. **SLA impact assessment** — calculate time remaining before SLA breach based on severity\n6. **Resource requests** — what additional resources or authority is needed\n\nUse standard incident management language (ITIL/SRE)."
+    },
+    {
+      "id": "action_remediation",
+      "type": "action",
+      "label": "Apply Remediation",
+      "description": "Execute the identified fix and verify recovery",
+      "position": {
+        "x": 7590,
+        "y": 358.75
+      },
+      "actionType": "copilot_prompt",
+      "template": "Service: {{affectedService}}. Architecture: {{architecture}}. Environment: {{environment}}. Symptoms: {{symptoms}}. Recent changes: {{recentChanges}}. Monitoring: {{monitoringExists}}.",
+      "systemPrompt": "You are an SRE applying a remediation to a production incident. Generate:\n1. **Fix implementation** — specific steps to apply the identified fix safely\n2. **Change management** — emergency change record template (what, why, risk, rollback plan)\n3. **Verification checklist** — ordered checks to confirm the fix resolved the issue:\n   - Immediate (0-5 min): error rate, latency, health checks\n   - Short-term (5-30 min): throughput recovery, queue drain, cache warm-up\n   - Medium-term (30-60 min): SLA metric recovery, customer report resolution\n4. **Monitoring adjustments** — temporary alert thresholds or additional dashboards to watch\n5. **Communication update** — status page update: 'Monitoring fix' template\n\nTailor to {{architecture}} architecture."
+    },
+    {
+      "id": "decision_postmortem",
+      "type": "decision",
+      "label": "Post-Mortem Depth",
+      "description": "How thorough should the post-incident review be?",
+      "position": {
+        "x": 7950,
+        "y": 358.75
+      },
+      "condition": "What level of post-mortem is warranted?",
+      "evaluateExpression": "{{initialSeverity}}",
+      "weightBias": [
+        {
+          "dimension": "rootCauseDepth",
+          "favorsBranch": "Full",
+          "strength": 0.7
+        },
+        {
+          "dimension": "costOfDowntime",
+          "favorsBranch": "Full",
+          "strength": 0.5
+        },
+        {
+          "dimension": "changeFreeze",
+          "favorsBranch": "Full",
+          "strength": 0.3
+        }
+      ]
+    },
+    {
+      "id": "action_full_postmortem",
+      "type": "action",
+      "label": "Full Post-Mortem",
+      "description": "Comprehensive blameless post-mortem with timeline, root cause, and action items",
+      "position": {
+        "x": 8310,
+        "y": 243.75
+      },
+      "actionType": "copilot_prompt",
+      "template": "Incident: {{affectedService}} in {{environment}}. Severity: {{initialSeverity}}. Alert source: {{alertSource}}. Symptoms: {{symptoms}}. Architecture: {{architecture}}. Changes: {{recentChanges}}. Monitoring: {{monitoringExists}}. Runbooks: {{runbooksExist}}. Canary: {{canaryAvailable}}.",
+      "systemPrompt": "You are a senior SRE facilitating a blameless post-mortem. Generate a complete post-mortem document:\n\n1. **Incident Summary** — What happened, impact duration, services affected, users impacted\n2. **Timeline** — Chronological events from first alert to resolution with timestamps\n3. **Root Cause Analysis** — Use the 5 Whys technique to dig to the systemic root cause\n4. **Contributing Factors** — What conditions allowed this to happen (gaps in monitoring, testing, process)\n5. **What Went Well** — Effective response actions, tools that helped, team coordination\n6. **What Went Poorly** — Delayed detection, missing runbooks, communication gaps\n7. **Action Items** — Prioritized list with owners and deadlines:\n   - P0 (this week): prevent exact recurrence\n   - P1 (this sprint): prevent similar incidents\n   - P2 (this quarter): systemic improvements\n8. **Monitoring Gaps** — New alerts, dashboards, or SLOs to add\n9. **Process Improvements** — Changes to on-call, escalation, or communication procedures\n10. **Change Freeze Recommendation** — Whether to enforce a deploy freeze and for how long\n\nBe specific to the incident details. Use blameless language throughout."
+    },
+    {
+      "id": "action_quick_retro",
+      "type": "action",
+      "label": "Quick Retro",
+      "description": "Lightweight retrospective for lower-severity incidents",
+      "position": {
+        "x": 8310,
+        "y": 468.75
+      },
+      "actionType": "copilot_prompt",
+      "template": "Incident: {{affectedService}}. Severity: {{initialSeverity}}. Symptoms: {{symptoms}}. Changes: {{recentChanges}}. Resolution: completed.",
+      "systemPrompt": "You are an SRE writing a quick incident retro for a lower-severity event. Generate:\n1. **One-paragraph summary** — what happened and how it was resolved\n2. **Root cause** — single sentence identifying the cause\n3. **Action items** — 2-3 concrete improvements with owners\n4. **Detection improvement** — one thing that would have caught this faster\n5. **Runbook update** — what to add to the service runbook\n\nKeep it concise. This is a 15-minute review, not a full post-mortem."
+    },
+    {
+      "id": "action_preventive",
+      "type": "action",
+      "label": "Preventive Measures",
+      "description": "Long-term reliability improvements to prevent recurrence",
+      "position": {
+        "x": 8670,
+        "y": 358.75
+      },
+      "actionType": "copilot_prompt",
+      "template": "Service: {{affectedService}}. Architecture: {{architecture}}. Root cause area: {{symptoms}}. Monitoring: {{monitoringExists}}. Runbooks: {{runbooksExist}}. Canary: {{canaryAvailable}}. Change freeze preference: high.",
+      "systemPrompt": "You are a reliability engineering lead designing preventive measures after a production incident. Generate:\n1. **SLO Definition** — Propose specific SLIs and SLOs for {{affectedService}} (availability, latency, error rate)\n2. **Alert Tuning** — New alerts that would have caught this sooner, with specific thresholds and burn-rate windows\n3. **Chaos Engineering** — GameDay scenario to test resilience against this failure mode\n4. **Architecture Hardening** — Specific changes to make the system more resilient (circuit breakers, bulkheads, retries, fallbacks)\n5. **Runbook Updates** — Outline of a new or updated runbook for this failure class\n6. **Testing Gaps** — Integration tests, load tests, or failure injection tests to add to CI/CD\n7. **Toil Reduction** — Automation opportunities identified during the incident\n\nBe specific and actionable. Include estimated effort for each recommendation."
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "input_alert",
+      "target": "input_severity"
+    },
+    {
+      "id": "e2",
+      "source": "input_severity",
+      "target": "input_affected_service"
+    },
+    {
+      "id": "e3",
+      "source": "input_affected_service",
+      "target": "input_environment"
+    },
+    {
+      "id": "e4",
+      "source": "input_environment",
+      "target": "input_symptoms"
+    },
+    {
+      "id": "e5",
+      "source": "input_symptoms",
+      "target": "input_recent_changes"
+    },
+    {
+      "id": "e6",
+      "source": "input_recent_changes",
+      "target": "input_architecture"
+    },
+    {
+      "id": "e7",
+      "source": "input_architecture",
+      "target": "input_team_status"
+    },
+    {
+      "id": "e8",
+      "source": "input_team_status",
+      "target": "assume_monitoring"
+    },
+    {
+      "id": "e9",
+      "source": "assume_monitoring",
+      "target": "assume_runbooks",
+      "label": "Yes"
+    },
+    {
+      "id": "e10",
+      "source": "assume_monitoring",
+      "target": "assume_runbooks",
+      "label": "No"
+    },
+    {
+      "id": "e11",
+      "source": "assume_runbooks",
+      "target": "assume_canary",
+      "label": "Yes"
+    },
+    {
+      "id": "e12",
+      "source": "assume_runbooks",
+      "target": "assume_canary",
+      "label": "No"
+    },
+    {
+      "id": "e13",
+      "source": "assume_canary",
+      "target": "decision_severity",
+      "label": "Yes"
+    },
+    {
+      "id": "e14",
+      "source": "assume_canary",
+      "target": "decision_severity",
+      "label": "No"
+    },
+    {
+      "id": "e15",
+      "source": "decision_severity",
+      "target": "action_war_room",
+      "label": "Critical"
+    },
+    {
+      "id": "e16",
+      "source": "decision_severity",
+      "target": "action_war_room",
+      "label": "Critical"
+    },
+    {
+      "id": "e17",
+      "source": "decision_severity",
+      "target": "action_quick_triage",
+      "label": "Non-Critical"
+    },
+    {
+      "id": "e18",
+      "source": "decision_severity",
+      "target": "action_quick_triage",
+      "label": "Non-Critical"
+    },
+    {
+      "id": "e19",
+      "source": "decision_severity",
+      "target": "action_war_room",
+      "label": "Unknown"
+    },
+    {
+      "id": "e20",
+      "source": "action_war_room",
+      "target": "decision_rollback",
+      "label": "Proceed to Investigation"
+    },
+    {
+      "id": "e21",
+      "source": "action_quick_triage",
+      "target": "decision_rollback",
+      "label": "Investigate Further"
+    },
+    {
+      "id": "e22",
+      "source": "action_quick_triage",
+      "target": "action_remediation",
+      "label": "Workaround Applied"
+    },
+    {
+      "id": "e23",
+      "source": "decision_rollback",
+      "target": "action_rollback",
+      "label": "Rollback"
+    },
+    {
+      "id": "e24",
+      "source": "decision_rollback",
+      "target": "action_rollback",
+      "label": "Rollback"
+    },
+    {
+      "id": "e25",
+      "source": "decision_rollback",
+      "target": "decision_failure_domain",
+      "label": "Investigate"
+    },
+    {
+      "id": "e26",
+      "source": "decision_rollback",
+      "target": "decision_failure_domain",
+      "label": "Investigate"
+    },
+    {
+      "id": "e27",
+      "source": "action_rollback",
+      "target": "decision_failure_domain",
+      "label": "Rollback Failed"
+    },
+    {
+      "id": "e28",
+      "source": "action_rollback",
+      "target": "action_remediation",
+      "label": "Rollback Succeeded"
+    },
+    {
+      "id": "e29",
+      "source": "decision_failure_domain",
+      "target": "action_infra_investigation",
+      "label": "Infrastructure"
+    },
+    {
+      "id": "e30",
+      "source": "decision_failure_domain",
+      "target": "action_app_investigation",
+      "label": "Application"
+    },
+    {
+      "id": "e31",
+      "source": "decision_failure_domain",
+      "target": "action_dependency_investigation",
+      "label": "External Dependency"
+    },
+    {
+      "id": "e32",
+      "source": "action_infra_investigation",
+      "target": "decision_escalation",
+      "label": "Root Cause Found"
+    },
+    {
+      "id": "e33",
+      "source": "action_infra_investigation",
+      "target": "action_app_investigation",
+      "label": "Not Infrastructure"
+    },
+    {
+      "id": "e34",
+      "source": "action_app_investigation",
+      "target": "decision_escalation",
+      "label": "Root Cause Found"
+    },
+    {
+      "id": "e35",
+      "source": "action_app_investigation",
+      "target": "action_dependency_investigation",
+      "label": "Not Application"
+    },
+    {
+      "id": "e36",
+      "source": "action_dependency_investigation",
+      "target": "decision_escalation",
+      "label": "Root Cause Found"
+    },
+    {
+      "id": "e37",
+      "source": "action_dependency_investigation",
+      "target": "decision_escalation",
+      "label": "Provider Confirmed Issue"
+    },
+    {
+      "id": "e38",
+      "source": "decision_escalation",
+      "target": "action_escalation",
+      "label": "Escalate"
+    },
+    {
+      "id": "e39",
+      "source": "decision_escalation",
+      "target": "action_remediation",
+      "label": "Handle In-Team"
+    },
+    {
+      "id": "e40",
+      "source": "action_escalation",
+      "target": "action_remediation",
+      "label": "Resources Assigned"
+    },
+    {
+      "id": "e41",
+      "source": "action_remediation",
+      "target": "decision_postmortem",
+      "label": "Issue Resolved"
+    },
+    {
+      "id": "e42",
+      "source": "action_remediation",
+      "target": "decision_failure_domain",
+      "label": "Fix Did Not Work"
+    },
+    {
+      "id": "e43",
+      "source": "action_remediation",
+      "target": "action_escalation",
+      "label": "Need More Help"
+    },
+    {
+      "id": "e44",
+      "source": "decision_postmortem",
+      "target": "action_full_postmortem",
+      "label": "Full"
+    },
+    {
+      "id": "e45",
+      "source": "decision_postmortem",
+      "target": "action_quick_retro",
+      "label": "Quick"
+    },
+    {
+      "id": "e46",
+      "source": "action_full_postmortem",
+      "target": "action_preventive",
+      "label": "Generate Preventive Plan"
+    },
+    {
+      "id": "e47",
+      "source": "action_quick_retro",
+      "target": "action_preventive",
+      "label": "Add Preventive Measures"
+    },
+    {
+      "id": "fb1",
+      "source": "action_infra_investigation",
+      "target": "action_infra_investigation",
+      "label": "Dig Deeper"
+    },
+    {
+      "id": "fb2",
+      "source": "action_app_investigation",
+      "target": "action_app_investigation",
+      "label": "Dig Deeper"
+    },
+    {
+      "id": "fb3",
+      "source": "action_dependency_investigation",
+      "target": "action_dependency_investigation",
+      "label": "Check Another Dependency"
+    },
+    {
+      "id": "fb4",
+      "source": "action_remediation",
+      "target": "action_remediation",
+      "label": "Try Different Fix"
+    },
+    {
+      "id": "fb5",
+      "source": "action_escalation",
+      "target": "action_escalation",
+      "label": "Escalate Further"
+    },
+    {
+      "id": "fb6",
+      "source": "action_rollback",
+      "target": "action_rollback",
+      "label": "Try Another Rollback"
+    },
+    {
+      "id": "fb7",
+      "source": "action_full_postmortem",
+      "target": "action_full_postmortem",
+      "label": "Refine Analysis"
+    },
+    {
+      "id": "fb8",
+      "source": "action_preventive",
+      "target": "action_preventive",
+      "label": "Add More Recommendations"
+    }
+  ]
+}

@@ -1,0 +1,1099 @@
+{
+  "id": "codex-spec-builder",
+  "name": "AI Coding Spec Builder (Codex)",
+  "description": "Guides teams through building AGENTS.md files, Starlark .rules, directory overrides, and prompt templates for OpenAI Codex — from project context gathering through spec generation, verification, and multi-agent configuration",
+  "version": "2.0.0",
+  "rootNodeId": "input_project_context",
+  "tags": [
+    "codex",
+    "ai-coding",
+    "spec",
+    "agents-md",
+    "starlark-rules",
+    "prompt-engineering",
+    "multi-agent",
+    "developer-productivity"
+  ],
+  "createdAt": "2026-03-04T00:00:00Z",
+  "updatedAt": "2026-03-08T04:54:06.797Z",
+  "defaultWeights": [
+    {
+      "id": "specPrecision",
+      "label": "Spec Precision",
+      "description": "How detailed and exhaustive the generated AGENTS.md should be — high produces comprehensive specs, low keeps them lean",
+      "value": 70,
+      "color": "#FF6B6B",
+      "icon": "🎯"
+    },
+    {
+      "id": "tokenEfficiency",
+      "label": "Token Efficiency",
+      "description": "How much creative latitude Codex should have — high constrains output tightly, low allows exploration",
+      "value": 50,
+      "color": "#4ECDC4",
+      "icon": "⚡"
+    },
+    {
+      "id": "testCoverage",
+      "label": "Test Coverage",
+      "description": "How strictly the spec should enforce testing requirements — high mandates TDD and full coverage, low defers to developer judgment",
+      "value": 60,
+      "color": "#45B7D1",
+      "icon": "🧪"
+    },
+    {
+      "id": "scopeControl",
+      "label": "Scope Control",
+      "description": "How tightly Codex changes should be scoped — high limits to single files/functions, low allows sweeping refactors",
+      "value": 75,
+      "color": "#96CEB4",
+      "icon": "🔒"
+    },
+    {
+      "id": "codeCreativity",
+      "label": "Code Creativity",
+      "description": "Balance between conventional patterns and novel approaches — high encourages creative solutions, low enforces established patterns",
+      "value": 40,
+      "color": "#FFEAA7",
+      "icon": "🎨"
+    },
+    {
+      "id": "contextDepth",
+      "label": "Context Depth",
+      "description": "How much codebase context Codex should read before acting — high scans broadly, low focuses narrowly on referenced files",
+      "value": 65,
+      "color": "#DDA0DD",
+      "icon": "📚"
+    },
+    {
+      "id": "iterationSpeed",
+      "label": "Iteration Speed",
+      "description": "Speed vs. thoroughness tradeoff — high favors quick incremental changes, low favors careful comprehensive changes",
+      "value": 55,
+      "color": "#98D8C8",
+      "icon": "🚀"
+    },
+    {
+      "id": "humanOversight",
+      "label": "Human Oversight",
+      "description": "How many checkpoints require human approval — high adds manual review gates, low trusts Codex to self-verify",
+      "value": 60,
+      "color": "#F7DC6F",
+      "icon": "👁️"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "input_project_context",
+      "type": "input",
+      "label": "Project Type",
+      "description": "What kind of project will Codex be working on? This determines the base template and domain-specific rules.",
+      "position": {
+        "x": 30,
+        "y": 522.5
+      },
+      "prompt": "What type of project will Codex assist with?",
+      "variableName": "projectType",
+      "inputType": "choice",
+      "choices": [
+        "Web Application (React/Vue/Angular)",
+        "API / Backend Service",
+        "CLI Tool",
+        "Mobile App (React Native / Flutter)",
+        "Library / SDK / Package",
+        "Full-Stack Monorepo",
+        "Data Pipeline / ML",
+        "Infrastructure / DevOps (IaC)"
+      ]
+    },
+    {
+      "id": "input_iac_tools",
+      "type": "input",
+      "label": "IaC Tooling",
+      "description": "Select the Infrastructure-as-Code tools your project uses. This determines which provider-specific rules, module conventions, and state-management guidelines appear in AGENTS.md.",
+      "position": {
+        "x": 350,
+        "y": 466.25
+      },
+      "prompt": "Which IaC tools does your project use? (select all that apply)",
+      "variableName": "iacTools",
+      "inputType": "multiselect",
+      "choices": [
+        "Terraform",
+        "ARM Templates",
+        "Bicep",
+        "PowerShell DSC",
+        "Ansible",
+        "Rundeck",
+        "Pulumi",
+        "CloudFormation",
+        "Chef / Puppet",
+        "Helm / Kustomize"
+      ]
+    },
+    {
+      "id": "input_language_framework",
+      "type": "input",
+      "label": "Language & Framework",
+      "description": "Primary language and framework — determines linting rules, import conventions, type system rules, and package manager preferences in AGENTS.md.",
+      "position": {
+        "x": 670,
+        "y": 998.75
+      },
+      "prompt": "What is the primary language and framework?",
+      "variableName": "languageFramework",
+      "inputType": "choice",
+      "choices": [
+        "TypeScript / Node.js",
+        "Python (Django / FastAPI / Flask)",
+        "Rust",
+        "Go",
+        "Java / Kotlin (Spring Boot)",
+        "C# / .NET",
+        "Ruby (Rails)",
+        "HCL (Terraform)",
+        "Multi-language monorepo"
+      ]
+    },
+    {
+      "id": "input_repo_structure",
+      "type": "input",
+      "label": "Repository Structure",
+      "description": "How the codebase is organized — determines whether nested AGENTS.md overrides are needed for different directories.",
+      "position": {
+        "x": 990,
+        "y": 998.75
+      },
+      "prompt": "How is the repository structured?",
+      "variableName": "repoStructure",
+      "inputType": "choice",
+      "choices": [
+        "Single package (flat src/ structure)",
+        "Monorepo (npm/pnpm workspaces or Turborepo)",
+        "Multi-repo / microservices",
+        "Monolith with domain modules"
+      ]
+    },
+    {
+      "id": "input_coding_standards",
+      "type": "input",
+      "label": "Coding Standards",
+      "description": "Describe your team's coding standards — linting, formatting, naming conventions, import ordering. Codex will embed these as working agreements in AGENTS.md.",
+      "position": {
+        "x": 1310,
+        "y": 1117.5
+      },
+      "prompt": "Describe your coding standards (linting rules, formatting, naming conventions) — or type 'auto' for AI-recommended defaults based on your language/framework:",
+      "variableName": "codingStandards",
+      "inputType": "text"
+    },
+    {
+      "id": "input_testing_approach",
+      "type": "input",
+      "label": "Testing Requirements",
+      "description": "Testing strategy that Codex must follow — determines verification rules and what Codex should run after making changes.",
+      "position": {
+        "x": 1630,
+        "y": 1117.5
+      },
+      "prompt": "What testing approach should Codex follow when making changes?",
+      "variableName": "testingApproach",
+      "inputType": "choice",
+      "choices": [
+        "Minimal — test critical paths only",
+        "Unit tests for all new/modified code",
+        "Unit + integration tests required",
+        "Full test pyramid (unit / integration / e2e)",
+        "TDD — write failing tests first, then implement"
+      ]
+    },
+    {
+      "id": "input_codex_surface",
+      "type": "input",
+      "label": "Codex Usage Surface",
+      "description": "Where the team will primarily use Codex — IDE extension auto-includes open files, CLI needs explicit file mentions, Cloud runs async.",
+      "position": {
+        "x": 1950,
+        "y": 697.5
+      },
+      "prompt": "Where will Codex primarily be used?",
+      "variableName": "codexSurface",
+      "inputType": "choice",
+      "choices": [
+        "IDE extension (VS Code — auto-includes open files)",
+        "CLI (codex command — explicit @ file mentions)",
+        "Cloud tasks (async background tasks)",
+        "All surfaces"
+      ]
+    },
+    {
+      "id": "input_security_requirements",
+      "type": "input",
+      "label": "Security Constraints",
+      "description": "Security level for Codex rules — determines which commands are allowed/forbidden in .rules files and what security checks AGENTS.md mandates.",
+      "position": {
+        "x": 2270,
+        "y": 697.5
+      },
+      "prompt": "What security constraints should Codex follow?",
+      "variableName": "securityLevel",
+      "inputType": "choice",
+      "choices": [
+        "Standard (OWASP basics, no secrets in code)",
+        "Strict (auth review, input validation, dependency audit)",
+        "Compliance-driven (SOC2 / HIPAA / PCI requirements)",
+        "Internal tool (minimal security, rapid iteration)"
+      ]
+    },
+    {
+      "id": "input_verification_mode",
+      "type": "input",
+      "label": "Verification Approach",
+      "description": "How Codex should verify its changes — Codex produces better results when it can verify its own work via tests, linting, or builds.",
+      "position": {
+        "x": 2590,
+        "y": 297.5
+      },
+      "prompt": "How should Codex verify its changes before completing a task?",
+      "variableName": "verificationMode",
+      "inputType": "choice",
+      "choices": [
+        "Run tests only",
+        "Lint + type-check + test",
+        "Full pipeline (lint + test + build + type-check)",
+        "Manual review only (no auto-verification)"
+      ]
+    },
+    {
+      "id": "assumption_git_workflow",
+      "type": "assumption",
+      "label": "Standard Git Workflow",
+      "description": "Assumes the team uses Git with feature branches and pull requests",
+      "position": {
+        "x": 2910,
+        "y": 753.75
+      },
+      "assumption": "The team uses Git with main/develop/feature branches. All changes go through pull requests. Codex should create atomic, well-scoped commits with conventional commit messages and never push directly to main or develop.",
+      "variableName": "gitWorkflow",
+      "default": true,
+      "weightInfluence": [
+        {
+          "dimension": "specPrecision",
+          "direction": "accept",
+          "strength": 0.5
+        },
+        {
+          "dimension": "scopeControl",
+          "direction": "accept",
+          "strength": 0.6
+        }
+      ]
+    },
+    {
+      "id": "assumption_ci_exists",
+      "type": "assumption",
+      "label": "CI/CD Pipeline Active",
+      "description": "Assumes CI runs lint, test, and build on every PR",
+      "position": {
+        "x": 3230,
+        "y": 753.75
+      },
+      "assumption": "A CI/CD pipeline (GitHub Actions, CircleCI, Jenkins, etc.) runs lint, test, and build checks on every pull request. Codex should ensure its changes pass CI. Include verification commands in AGENTS.md so Codex can pre-validate locally.",
+      "variableName": "ciExists",
+      "default": true,
+      "weightInfluence": [
+        {
+          "dimension": "testCoverage",
+          "direction": "accept",
+          "strength": 0.7
+        },
+        {
+          "dimension": "iterationSpeed",
+          "direction": "reject",
+          "strength": 0.3
+        }
+      ]
+    },
+    {
+      "id": "assumption_agents_discovery",
+      "type": "assumption",
+      "label": "AGENTS.md Discovery Order",
+      "description": "Codex reads AGENTS.md files top-down from global to project root to subdirectories",
+      "position": {
+        "x": 3550,
+        "y": 753.75
+      },
+      "assumption": "Codex reads AGENTS.md files in discovery order: global (~/.codex/AGENTS.md) then project root AGENTS.md then nested directory AGENTS.md files. Rules merge in this order with deeper files adding specificity. AGENTS.override.md takes highest precedence for temporary overrides.",
+      "variableName": "agentsDiscovery",
+      "default": true,
+      "weightInfluence": [
+        {
+          "dimension": "contextDepth",
+          "direction": "accept",
+          "strength": 0.8
+        },
+        {
+          "dimension": "specPrecision",
+          "direction": "accept",
+          "strength": 0.6
+        }
+      ]
+    },
+    {
+      "id": "decision_spec_depth",
+      "type": "decision",
+      "label": "Spec Complexity Level",
+      "description": "Choose the level of detail for the generated AGENTS.md — Lean for small projects, Standard for most teams, Comprehensive for large regulated codebases",
+      "position": {
+        "x": 3870,
+        "y": 753.75
+      },
+      "condition": "Based on the project type, repo structure, and security requirements — what level of AGENTS.md detail is appropriate?",
+      "evaluateExpression": "{{projectType}} + {{repoStructure}} + {{securityLevel}}",
+      "weightBias": [
+        {
+          "dimension": "specPrecision",
+          "favorsBranch": "Comprehensive",
+          "strength": 0.9
+        },
+        {
+          "dimension": "iterationSpeed",
+          "favorsBranch": "Lean",
+          "strength": 0.8
+        },
+        {
+          "dimension": "scopeControl",
+          "favorsBranch": "Standard",
+          "strength": 0.5
+        },
+        {
+          "dimension": "tokenEfficiency",
+          "favorsBranch": "Lean",
+          "strength": 0.7
+        }
+      ]
+    },
+    {
+      "id": "decision_rules_type",
+      "type": "decision",
+      "label": "Rules File Format",
+      "description": "Choose between text-only AGENTS.md rules, Starlark .rules files (with allow/prompt/forbidden command controls), or both",
+      "position": {
+        "x": 7390,
+        "y": 912.5
+      },
+      "condition": "Should command-level controls use text-only AGENTS.md, Starlark .rules files with prefix_rule() for allow/prompt/forbidden decisions, or both?",
+      "evaluateExpression": "{{securityLevel}} + {{verificationMode}}",
+      "weightBias": [
+        {
+          "dimension": "specPrecision",
+          "favorsBranch": "Both formats",
+          "strength": 0.8
+        },
+        {
+          "dimension": "iterationSpeed",
+          "favorsBranch": "Text-only AGENTS.md",
+          "strength": 0.7
+        },
+        {
+          "dimension": "testCoverage",
+          "favorsBranch": "Starlark .rules files",
+          "strength": 0.6
+        },
+        {
+          "dimension": "scopeControl",
+          "favorsBranch": "Both formats",
+          "strength": 0.7
+        }
+      ]
+    },
+    {
+      "id": "decision_override_needed",
+      "type": "decision",
+      "label": "Directory Overrides?",
+      "description": "Does the project need different AGENTS.md files for different directories (e.g., frontend/ vs backend/ vs shared/)?",
+      "position": {
+        "x": 8030,
+        "y": 948.75
+      },
+      "condition": "Does the repository structure require directory-specific AGENTS.md overrides with different rules per module?",
+      "evaluateExpression": "{{repoStructure}}",
+      "weightBias": [
+        {
+          "dimension": "scopeControl",
+          "favorsBranch": "Yes — subdirectories need different rules",
+          "strength": 0.7
+        },
+        {
+          "dimension": "iterationSpeed",
+          "favorsBranch": "No — single rule set",
+          "strength": 0.5
+        },
+        {
+          "dimension": "specPrecision",
+          "favorsBranch": "Yes — subdirectories need different rules",
+          "strength": 0.6
+        }
+      ]
+    },
+    {
+      "id": "decision_prompt_style",
+      "type": "decision",
+      "label": "Prompt Template Style",
+      "description": "How should reusable prompt templates be structured for the team's Codex workflows?",
+      "position": {
+        "x": 8990,
+        "y": 856.25
+      },
+      "condition": "What prompt template style fits the team's Codex usage: minimal task-focused prompts, detailed prompts with verification steps, or full multi-step workflow recipes?",
+      "evaluateExpression": "{{codexSurface}} + {{testingApproach}}",
+      "weightBias": [
+        {
+          "dimension": "tokenEfficiency",
+          "favorsBranch": "Minimal",
+          "strength": 0.8
+        },
+        {
+          "dimension": "specPrecision",
+          "favorsBranch": "Workflow recipes",
+          "strength": 0.7
+        },
+        {
+          "dimension": "codeCreativity",
+          "favorsBranch": "Detailed with verification",
+          "strength": 0.5
+        },
+        {
+          "dimension": "iterationSpeed",
+          "favorsBranch": "Minimal",
+          "strength": 0.6
+        }
+      ]
+    },
+    {
+      "id": "decision_multi_agent",
+      "type": "decision",
+      "label": "Multi-Agent Setup?",
+      "description": "Should different Codex agents specialize in different tasks (code, tests, docs, reviews) or use a single agent for everything?",
+      "position": {
+        "x": 9310,
+        "y": 400
+      },
+      "condition": "Should the project use a single general-purpose Codex agent or configure specialized multi-agent roles?",
+      "evaluateExpression": "{{projectType}} + {{repoStructure}}",
+      "weightBias": [
+        {
+          "dimension": "iterationSpeed",
+          "favorsBranch": "Single agent",
+          "strength": 0.6
+        },
+        {
+          "dimension": "specPrecision",
+          "favorsBranch": "Multi-agent",
+          "strength": 0.7
+        },
+        {
+          "dimension": "scopeControl",
+          "favorsBranch": "Multi-agent",
+          "strength": 0.8
+        },
+        {
+          "dimension": "testCoverage",
+          "favorsBranch": "Multi-agent",
+          "strength": 0.5
+        }
+      ]
+    },
+    {
+      "id": "action_quick_spec",
+      "type": "action",
+      "label": "Generate Lean AGENTS.md",
+      "description": "One-shot generation of a minimal but effective AGENTS.md for small projects or rapid prototyping",
+      "position": {
+        "x": 4190,
+        "y": 76.25
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a lean, minimal AGENTS.md file for a Codex-assisted project.\n\nProject Context:\n- Type: {{projectType}}\n- IaC Tools: {{iacTools}}\n- Language: {{languageFramework}}\n- Repo Structure: {{repoStructure}}\n- Coding Standards: {{codingStandards}}\n- Testing: {{testingApproach}}\n- Codex Surface: {{codexSurface}}\n- Security: {{securityLevel}}\n- Verification: {{verificationMode}}\n\nGenerate a concise AGENTS.md with these sections:\n1. **Working Agreements** (5-8 essential rules)\n2. **Repository Expectations** (file structure, naming)\n3. **Verification Steps** (what to run after changes)\n\nKeep it under 60 lines. Focus on the highest-impact rules only.",
+      "systemPrompt": "You are an expert in configuring OpenAI Codex for development teams. Generate practical, concise AGENTS.md files that maximize Codex effectiveness with minimal token overhead."
+    },
+    {
+      "id": "action_full_audit",
+      "type": "action",
+      "label": "Codebase Audit for Spec",
+      "description": "Comprehensive codebase analysis before generating a detailed AGENTS.md",
+      "position": {
+        "x": 5150,
+        "y": 707.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Perform a comprehensive codebase audit to inform AGENTS.md generation.\n\nProject: {{projectType}} in {{languageFramework}}\nIaC Tools: {{iacTools}}\nRepo Structure: {{repoStructure}}\nTeam Standards: {{codingStandards}}\n\nAnalyze:\n1. Detected Patterns\n2. Implicit Conventions\n3. Testing Patterns\n4. Dependency Conventions\n5. Build and Deploy\n6. Potential Anti-patterns\n7. Security Posture\n\nOutput a structured audit report that will directly inform each section of AGENTS.md.",
+      "systemPrompt": "You are a senior software architect performing a codebase audit to create Codex AGENTS.md configuration. Be specific — cite file paths and concrete examples."
+    },
+    {
+      "id": "action_working_agreements",
+      "type": "action",
+      "label": "Generate Working Agreements",
+      "description": "Generate the core Working Agreements section of AGENTS.md — the fundamental behavior rules Codex must follow",
+      "position": {
+        "x": 5470,
+        "y": 661.25
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate the Working Agreements section of AGENTS.md for Codex.\n\nProject: {{projectType}} in {{languageFramework}}\nRepo: {{repoStructure}}\nCoding Standards: {{codingStandards}}\nGit Workflow: {{gitWorkflow}}\nCI Active: {{ciExists}}\nVerification: {{verificationMode}}\n\nGenerate working agreements covering:\n1. Commit Discipline\n2. Code Style\n3. Change Scope\n4. Communication\n5. Error Handling\n\nFormat as ## Working Agreements. Use imperative voice.",
+      "systemPrompt": "You are an expert in writing AGENTS.md files for OpenAI Codex. Working agreements define the behavior contract between developer and Codex. Every rule must be unambiguous, actionable, and verifiable."
+    },
+    {
+      "id": "action_repo_expectations",
+      "type": "action",
+      "label": "Generate Repo Expectations",
+      "description": "Generate the Repository Expectations section — file structure, module boundaries, import conventions",
+      "position": {
+        "x": 5790,
+        "y": 866.25
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate the Repository Expectations section of AGENTS.md.\n\nProject: {{projectType}} in {{languageFramework}}\nIaC Tools: {{iacTools}}\nRepo Structure: {{repoStructure}}\n\nCover:\n1. Directory Structure\n2. Module Boundaries\n3. Import Conventions\n4. Naming Conventions\n5. New File Checklist\n6. Forbidden Patterns\n\nFormat as ## Repository Expectations.",
+      "systemPrompt": "You are a senior developer writing repository structure rules for Codex. Be precise about file paths and patterns."
+    },
+    {
+      "id": "action_coding_rules",
+      "type": "action",
+      "label": "Generate Coding Rules",
+      "description": "Generate language-specific coding rules — patterns to follow, anti-patterns to avoid",
+      "position": {
+        "x": 6110,
+        "y": 968.75
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate the Coding Rules section of AGENTS.md for {{languageFramework}}.\n\nProject Type: {{projectType}}\nCoding Standards: {{codingStandards}}\nSecurity Level: {{securityLevel}}\n\nCover:\n1. Type Safety\n2. Error Handling\n3. Async Patterns\n4. State Management\n5. Performance\n6. Framework Conventions\n7. Forbidden Patterns\n\nFormat as ## Coding Rules.",
+      "systemPrompt": "You are an expert developer writing coding rules for an AI coding agent. Rules must be specific to the language and framework."
+    },
+    {
+      "id": "action_test_rules",
+      "type": "action",
+      "label": "Generate Testing Rules",
+      "description": "Generate testing requirements — what to test, how to test, coverage expectations",
+      "position": {
+        "x": 6430,
+        "y": 1153.75
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate the Testing Requirements section of AGENTS.md.\n\nLanguage: {{languageFramework}}\nTesting Approach: {{testingApproach}}\nVerification: {{verificationMode}}\nCI Active: {{ciExists}}\n\nCover:\n1. Test Naming\n2. Coverage Rules\n3. Test Structure\n4. Mocking Strategy\n5. Test Data\n6. Verification Commands\n7. CI Integration\n\nFormat as ## Testing Requirements with runnable commands.",
+      "systemPrompt": "You are a test engineering expert writing testing rules for an AI coding agent. Include exact commands to run."
+    },
+    {
+      "id": "action_security_rules",
+      "type": "action",
+      "label": "Generate Security Rules",
+      "description": "Generate security constraints — secrets handling, auth patterns, input validation",
+      "position": {
+        "x": 6750,
+        "y": 1107.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate the Security Constraints section of AGENTS.md.\n\nSecurity Level: {{securityLevel}}\nLanguage: {{languageFramework}}\nProject Type: {{projectType}}\n\nCover:\n1. Secrets Management\n2. Authentication\n3. Input Validation\n4. Dependency Security\n5. Access Control\n6. Forbidden Actions\n7. Logging\n\nFormat as ## Security Constraints.",
+      "systemPrompt": "You are a security engineer writing security rules for an AI coding agent. Rules must be concrete and enforceable."
+    },
+    {
+      "id": "action_doc_standards",
+      "type": "action",
+      "label": "Generate Documentation Rules",
+      "description": "Generate documentation standards — what to document, JSDoc/docstring conventions",
+      "position": {
+        "x": 7070,
+        "y": 912.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate the Documentation Standards section of AGENTS.md.\n\nLanguage: {{languageFramework}}\nProject Type: {{projectType}}\n\nCover:\n1. Inline Documentation\n2. README Updates\n3. API Documentation\n4. Architecture Decisions\n5. Changelog\n6. Code Comments\n\nFormat as ## Documentation Standards.",
+      "systemPrompt": "You are a technical writer creating documentation rules for an AI coding agent. Focus on rules that produce useful documentation without busywork."
+    },
+    {
+      "id": "action_starlark_rules",
+      "type": "action",
+      "label": "Generate Starlark Rules",
+      "description": "Generate a .rules file using Starlark syntax with prefix_rule() for allow/prompt/forbidden command decisions",
+      "position": {
+        "x": 7710,
+        "y": 713.75
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a Codex .rules file using Starlark syntax for command control.\n\nSecurity Level: {{securityLevel}}\nLanguage: {{languageFramework}}\nVerification: {{verificationMode}}\n\nGenerate Starlark rules using prefix_rule() with:\n- ALLOW — Command runs without confirmation\n- PROMPT — Codex asks user before running\n- FORBIDDEN — Command is never allowed\n\nCover: Package Management, Test Commands, Build Commands, File Operations, Git Operations, Dangerous Commands, Environment.\n\nExample: prefix_rule('npm test', ALLOW)",
+      "systemPrompt": "You are an expert in configuring Codex Starlark rules files. Generate well-organized .rules files that balance developer velocity with safety."
+    },
+    {
+      "id": "action_frontend_override",
+      "type": "action",
+      "label": "Generate Frontend Override",
+      "description": "Generate a frontend/AGENTS.md with UI-specific rules that override or extend the root AGENTS.md",
+      "position": {
+        "x": 8350,
+        "y": 512.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a frontend/AGENTS.md directory override for Codex.\n\nLanguage: {{languageFramework}}\nProject Type: {{projectType}}\n\nAdd frontend-specific rules for:\n1. Component Conventions\n2. Styling Rules\n3. Accessibility\n4. Performance\n5. Testing Overrides\n6. Build and Dev",
+      "systemPrompt": "You are a frontend architect writing Codex directory overrides. Do not repeat root rules — only add new ones or override behavior."
+    },
+    {
+      "id": "action_backend_override",
+      "type": "action",
+      "label": "Generate Backend Override",
+      "description": "Generate a backend/AGENTS.md with API/service-specific rules",
+      "position": {
+        "x": 8670,
+        "y": 466.25
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a backend/AGENTS.md directory override for Codex.\n\nLanguage: {{languageFramework}}\nProject Type: {{projectType}}\nSecurity Level: {{securityLevel}}\n\nAdd backend-specific rules for:\n1. API Design\n2. Database\n3. Authentication\n4. Error Responses\n5. Performance\n6. Testing Overrides",
+      "systemPrompt": "You are a backend architect writing Codex directory overrides. Focus on patterns unique to server-side code."
+    },
+    {
+      "id": "action_prompt_templates",
+      "type": "action",
+      "label": "Generate Prompt Templates",
+      "description": "Generate reusable prompt templates for common Codex workflows — feature implementation, bug fixing, refactoring",
+      "position": {
+        "x": 9950,
+        "y": 307.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate reusable Codex prompt templates for common workflows.\n\nProject: {{projectType}} in {{languageFramework}}\nCodex Surface: {{codexSurface}}\nTesting: {{testingApproach}}\nVerification: {{verificationMode}}\n\nGenerate templates for:\n1. Feature Implementation\n2. Bug Fix\n3. Refactoring\n4. Test Writing\n5. Code Review\n6. Documentation Update\n7. Dependency Update\n\nEach with clear task description, explicit constraints, verification steps, and context hints.",
+      "systemPrompt": "You are a prompt engineering expert writing Codex workflow templates. Each template should be copy-paste ready with placeholders."
+    },
+    {
+      "id": "action_multi_agent_config",
+      "type": "action",
+      "label": "Generate Multi-Agent Config",
+      "description": "Configure specialized Codex agents with different roles — code, tests, docs, reviews, security",
+      "position": {
+        "x": 9630,
+        "y": 343.75
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a multi-agent Codex configuration.\n\nProject: {{projectType}} in {{languageFramework}}\nIaC Tools: {{iacTools}}\nRepo Structure: {{repoStructure}}\nTesting: {{testingApproach}}\nSecurity: {{securityLevel}}\n\nConfigure agents:\n1. Code Agent\n2. Test Agent\n3. Review Agent\n4. Docs Agent\n5. Ops Agent\n\nFor each: name, allowed file patterns, forbidden actions, verification steps, handoff triggers.",
+      "systemPrompt": "You are an expert in configuring multi-agent AI coding workflows. Each agent should have clearly defined boundaries."
+    },
+    {
+      "id": "action_compile_agents_md",
+      "type": "action",
+      "label": "Compile Complete AGENTS.md",
+      "description": "Assemble all generated sections into a complete, production-ready AGENTS.md file",
+      "position": {
+        "x": 4830,
+        "y": 373.75
+      },
+      "actionType": "copilot_prompt",
+      "template": "Compile a complete, production-ready AGENTS.md file.\n\nProject Context:\n- Type: {{projectType}}\n- IaC Tools: {{iacTools}}\n- Language: {{languageFramework}}\n- Repo Structure: {{repoStructure}}\n- Coding Standards: {{codingStandards}}\n- Testing: {{testingApproach}}\n- Codex Surface: {{codexSurface}}\n- Security: {{securityLevel}}\n- Verification: {{verificationMode}}\n- Git Workflow: {{gitWorkflow}}\n- CI/CD: {{ciExists}}\n- Discovery Order: {{agentsDiscovery}}\n\nSections: Header, Working Agreements, Repository Expectations, Coding Rules, Testing Requirements, Security Constraints, Documentation Standards, Verification Checklist.",
+      "systemPrompt": "You are assembling the final AGENTS.md file. It must be internally consistent, practical, and complete. Ensure every rule is testable."
+    },
+    {
+      "id": "action_generate_global",
+      "type": "action",
+      "label": "Generate Global AGENTS.md",
+      "description": "Generate a cross-project global ~/.codex/AGENTS.md with universal rules",
+      "position": {
+        "x": 5150,
+        "y": 482.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a global ~/.codex/AGENTS.md file with cross-project rules.\n\nDeveloper preferences:\n- Language: {{languageFramework}}\n- Codex Surface: {{codexSurface}}\n- Security Level: {{securityLevel}}\n- Verification: {{verificationMode}}\n\nContain only UNIVERSAL rules for ALL projects. Keep it under 40 lines.",
+      "systemPrompt": "You are writing a global Codex configuration at ~/.codex/AGENTS.md loaded for EVERY project. Keep rules truly universal."
+    },
+    {
+      "id": "action_generate_override_file",
+      "type": "action",
+      "label": "Generate Override Template",
+      "description": "Generate an AGENTS.override.md template for temporary rule overrides during sprints, experiments, or hotfixes",
+      "position": {
+        "x": 5470,
+        "y": 215
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate an AGENTS.override.md template for temporary Codex rule overrides.\n\nProject: {{projectType}} in {{languageFramework}}\n\nGenerate template with:\n1. Override Header (expiration date, reason, approver)\n2. Sprint-Specific Overrides\n3. Hotfix Overrides\n4. Experiment Overrides\n5. Cleanup Reminder",
+      "systemPrompt": "You are writing an AGENTS.override.md template. This file temporarily overrides AGENTS.md rules. Mark as temporary with expiration date."
+    },
+    {
+      "id": "action_verification_config",
+      "type": "action",
+      "label": "Generate Verification Steps",
+      "description": "Generate the verification configuration — exact commands and checks Codex should run",
+      "position": {
+        "x": 5790,
+        "y": 122.5
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate the Verification Configuration for AGENTS.md.\n\nLanguage: {{languageFramework}}\nVerification Mode: {{verificationMode}}\nTesting: {{testingApproach}}\nCI Active: {{ciExists}}\n\nGenerate checklist with exact commands:\n1. Pre-Change Checks\n2. Post-Change Lint\n3. Type Checking\n4. Test Execution\n5. Build Verification\n6. Security Scan\n7. Completion Criteria\n\nFormat as ## Verification Checklist.",
+      "systemPrompt": "You are a DevOps engineer writing verification steps for an AI coding agent. Every step must have an exact, runnable command."
+    },
+    {
+      "id": "action_review_refine",
+      "type": "action",
+      "label": "Review & Iterate Spec",
+      "description": "Review the generated spec for completeness, consistency, and effectiveness",
+      "position": {
+        "x": 4510,
+        "y": 76.25
+      },
+      "actionType": "copilot_prompt",
+      "template": "Review the generated AGENTS.md specification.\n\nProject: {{projectType}} in {{languageFramework}}\n\nQuality checks:\n1. Consistency Audit\n2. Completeness Check\n3. Actionability Test\n4. Token Efficiency\n5. Priority Conflicts\n6. Discovery Order\n7. Improvement Suggestions\n\nOutput structured review report.",
+      "systemPrompt": "You are a senior engineering lead reviewing an AGENTS.md spec. Be critical but constructive. Focus on rules that would cause Codex to make mistakes."
+    },
+    {
+      "id": "action_export_spec",
+      "type": "action",
+      "label": "Export Final Spec Suite",
+      "description": "Export the complete specification suite — AGENTS.md, .rules, directory overrides, global config, and override template",
+      "position": {
+        "x": 4830,
+        "y": 30
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate the final exported specification suite for Codex.\n\nProject: {{projectType}} in {{languageFramework}}\nIaC Tools: {{iacTools}}\n\nProduce:\n1. AGENTS.md (project root)\n2. .codex/rules (if Starlark selected)\n3. frontend/AGENTS.md (if overrides selected)\n4. backend/AGENTS.md (if overrides selected)\n5. ~/.codex/AGENTS.md (global config)\n6. AGENTS.override.md (template)\n\nInclude Implementation Guide with file placement, validation, iteration, and team onboarding steps.",
+      "systemPrompt": "You are producing the final deliverable — a complete Codex specification suite. Every file must be production-ready and copy-paste-ready."
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "input_project_context",
+      "target": "input_language_framework"
+    },
+    {
+      "id": "e1_iac",
+      "source": "input_project_context",
+      "target": "input_iac_tools",
+      "label": "Infrastructure / DevOps (IaC)"
+    },
+    {
+      "id": "e1_iac_next",
+      "source": "input_iac_tools",
+      "target": "input_language_framework"
+    },
+    {
+      "id": "e2",
+      "source": "input_language_framework",
+      "target": "input_repo_structure"
+    },
+    {
+      "id": "e3",
+      "source": "input_repo_structure",
+      "target": "input_coding_standards"
+    },
+    {
+      "id": "e4",
+      "source": "input_coding_standards",
+      "target": "input_testing_approach"
+    },
+    {
+      "id": "e5",
+      "source": "input_testing_approach",
+      "target": "input_codex_surface"
+    },
+    {
+      "id": "e6",
+      "source": "input_codex_surface",
+      "target": "input_security_requirements"
+    },
+    {
+      "id": "e7",
+      "source": "input_security_requirements",
+      "target": "input_verification_mode"
+    },
+    {
+      "id": "e8",
+      "source": "input_verification_mode",
+      "target": "assumption_git_workflow"
+    },
+    {
+      "id": "e9",
+      "source": "assumption_git_workflow",
+      "target": "assumption_ci_exists"
+    },
+    {
+      "id": "e10",
+      "source": "assumption_ci_exists",
+      "target": "assumption_agents_discovery"
+    },
+    {
+      "id": "e11",
+      "source": "assumption_agents_discovery",
+      "target": "decision_spec_depth"
+    },
+    {
+      "id": "e12_lean",
+      "source": "decision_spec_depth",
+      "target": "action_quick_spec",
+      "label": "Lean"
+    },
+    {
+      "id": "e12_standard",
+      "source": "decision_spec_depth",
+      "target": "action_working_agreements",
+      "label": "Standard"
+    },
+    {
+      "id": "e12_comprehensive",
+      "source": "decision_spec_depth",
+      "target": "action_full_audit",
+      "label": "Comprehensive"
+    },
+    {
+      "id": "e13",
+      "source": "action_quick_spec",
+      "target": "action_review_refine"
+    },
+    {
+      "id": "e14",
+      "source": "action_full_audit",
+      "target": "action_working_agreements"
+    },
+    {
+      "id": "e15",
+      "source": "action_working_agreements",
+      "target": "action_repo_expectations"
+    },
+    {
+      "id": "e16",
+      "source": "action_repo_expectations",
+      "target": "action_coding_rules"
+    },
+    {
+      "id": "e17",
+      "source": "action_coding_rules",
+      "target": "action_test_rules"
+    },
+    {
+      "id": "e18",
+      "source": "action_test_rules",
+      "target": "action_security_rules"
+    },
+    {
+      "id": "e19",
+      "source": "action_security_rules",
+      "target": "action_doc_standards"
+    },
+    {
+      "id": "e20",
+      "source": "action_doc_standards",
+      "target": "decision_rules_type"
+    },
+    {
+      "id": "e21_text",
+      "source": "decision_rules_type",
+      "target": "decision_override_needed",
+      "label": "Text-only AGENTS.md"
+    },
+    {
+      "id": "e21_starlark",
+      "source": "decision_rules_type",
+      "target": "action_starlark_rules",
+      "label": "Starlark .rules files"
+    },
+    {
+      "id": "e21_both",
+      "source": "decision_rules_type",
+      "target": "action_starlark_rules",
+      "label": "Both formats"
+    },
+    {
+      "id": "e22",
+      "source": "action_starlark_rules",
+      "target": "decision_override_needed"
+    },
+    {
+      "id": "e23_yes",
+      "source": "decision_override_needed",
+      "target": "action_frontend_override",
+      "label": "Yes — subdirectories need different rules"
+    },
+    {
+      "id": "e23_no",
+      "source": "decision_override_needed",
+      "target": "decision_prompt_style",
+      "label": "No — single rule set"
+    },
+    {
+      "id": "e24",
+      "source": "action_frontend_override",
+      "target": "action_backend_override"
+    },
+    {
+      "id": "e25",
+      "source": "action_backend_override",
+      "target": "decision_prompt_style"
+    },
+    {
+      "id": "e26_minimal",
+      "source": "decision_prompt_style",
+      "target": "decision_multi_agent",
+      "label": "Minimal"
+    },
+    {
+      "id": "e26_detailed",
+      "source": "decision_prompt_style",
+      "target": "action_prompt_templates",
+      "label": "Detailed with verification"
+    },
+    {
+      "id": "e26_workflow",
+      "source": "decision_prompt_style",
+      "target": "action_prompt_templates",
+      "label": "Workflow recipes"
+    },
+    {
+      "id": "e27",
+      "source": "action_prompt_templates",
+      "target": "decision_multi_agent"
+    },
+    {
+      "id": "e28_single",
+      "source": "decision_multi_agent",
+      "target": "action_compile_agents_md",
+      "label": "Single agent"
+    },
+    {
+      "id": "e28_multi",
+      "source": "decision_multi_agent",
+      "target": "action_multi_agent_config",
+      "label": "Multi-agent"
+    },
+    {
+      "id": "e29",
+      "source": "action_multi_agent_config",
+      "target": "action_compile_agents_md"
+    },
+    {
+      "id": "e30",
+      "source": "action_compile_agents_md",
+      "target": "action_generate_global"
+    },
+    {
+      "id": "e31",
+      "source": "action_generate_global",
+      "target": "action_generate_override_file"
+    },
+    {
+      "id": "e32",
+      "source": "action_generate_override_file",
+      "target": "action_verification_config"
+    },
+    {
+      "id": "e33",
+      "source": "action_verification_config",
+      "target": "action_review_refine"
+    },
+    {
+      "id": "e34",
+      "source": "action_review_refine",
+      "target": "action_export_spec"
+    },
+    {
+      "id": "fb1",
+      "source": "action_quick_spec",
+      "target": "input_project_context",
+      "label": "Start over with more detail"
+    },
+    {
+      "id": "fb2",
+      "source": "action_working_agreements",
+      "target": "input_coding_standards",
+      "label": "Refine coding standards"
+    },
+    {
+      "id": "fb3",
+      "source": "action_repo_expectations",
+      "target": "input_repo_structure",
+      "label": "Restructure repository"
+    },
+    {
+      "id": "fb4",
+      "source": "action_coding_rules",
+      "target": "action_working_agreements",
+      "label": "Revise working agreements"
+    },
+    {
+      "id": "fb5",
+      "source": "action_test_rules",
+      "target": "input_testing_approach",
+      "label": "Change testing strategy"
+    },
+    {
+      "id": "fb6",
+      "source": "action_security_rules",
+      "target": "input_security_requirements",
+      "label": "Adjust security level"
+    },
+    {
+      "id": "fb7",
+      "source": "action_doc_standards",
+      "target": "action_working_agreements",
+      "label": "Revise documentation rules"
+    },
+    {
+      "id": "fb8",
+      "source": "action_starlark_rules",
+      "target": "decision_rules_type",
+      "label": "Change rules format"
+    },
+    {
+      "id": "fb9",
+      "source": "action_frontend_override",
+      "target": "action_repo_expectations",
+      "label": "Restructure modules"
+    },
+    {
+      "id": "fb10",
+      "source": "action_backend_override",
+      "target": "action_coding_rules",
+      "label": "Revise coding rules"
+    },
+    {
+      "id": "fb11",
+      "source": "action_prompt_templates",
+      "target": "action_working_agreements",
+      "label": "Revise core agreements"
+    },
+    {
+      "id": "fb12",
+      "source": "action_multi_agent_config",
+      "target": "action_prompt_templates",
+      "label": "Revise prompt templates"
+    },
+    {
+      "id": "fb13",
+      "source": "action_compile_agents_md",
+      "target": "action_working_agreements",
+      "label": "Major revision needed"
+    },
+    {
+      "id": "fb14",
+      "source": "action_compile_agents_md",
+      "target": "decision_spec_depth",
+      "label": "Change spec depth"
+    },
+    {
+      "id": "fb15",
+      "source": "action_review_refine",
+      "target": "action_compile_agents_md",
+      "label": "Regenerate spec"
+    },
+    {
+      "id": "fb16",
+      "source": "action_export_spec",
+      "target": "action_review_refine",
+      "label": "Final refinements"
+    },
+    {
+      "id": "fb17",
+      "source": "action_verification_config",
+      "target": "input_verification_mode",
+      "label": "Change verification approach"
+    },
+    {
+      "id": "fb18",
+      "source": "action_generate_global",
+      "target": "action_working_agreements",
+      "label": "Revise global rules"
+    }
+  ]
+}

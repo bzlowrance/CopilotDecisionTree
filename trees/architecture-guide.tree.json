@@ -1,0 +1,409 @@
+{
+  "id": "architecture-guide",
+  "name": "Architecture Guide",
+  "description": "Helps choose between message queue vs. event stream based on your requirements and weight preferences",
+  "version": "1.0.0",
+  "rootNodeId": "input_pattern",
+  "tags": [
+    "architecture",
+    "messaging",
+    "guide"
+  ],
+  "createdAt": "2025-01-01T00:00:00Z",
+  "updatedAt": "2026-03-08T04:54:10.989Z",
+  "defaultWeights": [
+    {
+      "id": "reliability",
+      "label": "Reliability",
+      "description": "System uptime requirements — high demands 99.99%, low accepts occasional downtime",
+      "value": 70,
+      "color": "#FF6B6B",
+      "icon": "🛡️"
+    },
+    {
+      "id": "budgetConstraint",
+      "label": "Budget Constraint",
+      "description": "Infrastructure budget limits — high optimizes every dollar, low has flexible budget",
+      "value": 50,
+      "color": "#4ECDC4",
+      "icon": "💰"
+    },
+    {
+      "id": "techInnovation",
+      "label": "Tech Innovation",
+      "description": "Appetite for new technologies — high experiments, low uses proven patterns",
+      "value": 55,
+      "color": "#45B7D1",
+      "icon": "🚀"
+    },
+    {
+      "id": "archComplexity",
+      "label": "Architecture Complexity",
+      "description": "Acceptable system complexity — high allows distributed, low favors simple",
+      "value": 50,
+      "color": "#96CEB4",
+      "icon": "🧩"
+    },
+    {
+      "id": "timeToMarket",
+      "label": "Time to Market",
+      "description": "Delivery urgency — high ships MVP fast, low builds thoroughly",
+      "value": 50,
+      "color": "#FFEAA7",
+      "icon": "⏱️"
+    },
+    {
+      "id": "aiAutomation",
+      "label": "AI Automation",
+      "description": "How much AI assists decisions — high automates, low requires human review",
+      "value": 50,
+      "color": "#DDA0DD",
+      "icon": "🤖"
+    },
+    {
+      "id": "securityPosture",
+      "label": "Security Posture",
+      "description": "Security hardening level — high adds defense-in-depth, low uses standard practices",
+      "value": 65,
+      "color": "#F0E68C",
+      "icon": "🔒"
+    },
+    {
+      "id": "growthDesign",
+      "label": "Growth Design",
+      "description": "Scaling strategy — high designs for massive scale, low optimizes for current load",
+      "value": 50,
+      "color": "#87CEEB",
+      "icon": "📈"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "input_alert",
+      "type": "input",
+      "label": "Alert Description",
+      "description": "What alert or user report triggered this incident?",
+      "position": {
+        "x": 30,
+        "y": 442.5
+      },
+      "prompt": "What triggered this incident?",
+      "variableName": "alertType",
+      "inputType": "choice",
+      "choices": [
+        "5xx error spike",
+        "Latency above SLO threshold",
+        "Service completely unreachable",
+        "Data inconsistency / corruption",
+        "Security alert / potential breach",
+        "Resource exhaustion (CPU / memory / disk)"
+      ]
+    },
+    {
+      "id": "input_impact",
+      "type": "input",
+      "label": "Blast Radius",
+      "description": "How many users/services are affected?",
+      "position": {
+        "x": 430,
+        "y": 442.5
+      },
+      "prompt": "What is the blast radius of this incident?",
+      "variableName": "blastRadius",
+      "inputType": "choice",
+      "choices": [
+        "Single user / edge case",
+        "Subset of users (< 10%)",
+        "Major segment (10-50% of users)",
+        "Widespread (> 50% of users)",
+        "Total outage — all users affected"
+      ]
+    },
+    {
+      "id": "input_recent_change",
+      "type": "input",
+      "label": "Recent Changes",
+      "description": "Were any changes deployed recently?",
+      "position": {
+        "x": 830,
+        "y": 442.5
+      },
+      "prompt": "Were any changes deployed in the last 24 hours?",
+      "variableName": "recentChange",
+      "inputType": "choice",
+      "choices": [
+        "Code deployment in last 2 hours",
+        "Config change (feature flag, env var)",
+        "Infrastructure change (scaling, cert rotation)",
+        "Dependency update (3rd party API, library)",
+        "No recent changes"
+      ]
+    },
+    {
+      "id": "assumption_rollback",
+      "type": "assumption",
+      "label": "Rollback Available",
+      "description": "Assumes a quick rollback is possible",
+      "position": {
+        "x": 1230,
+        "y": 442.5
+      },
+      "assumption": "A rollback to the previous known-good version is available and can be executed within 15 minutes without data loss. If database migrations were involved, rollback may be destructive.",
+      "variableName": "canRollback",
+      "default": true,
+      "weightInfluence": [
+        {
+          "dimension": "timeToMarket",
+          "direction": "accept",
+          "strength": 0.9
+        },
+        {
+          "dimension": "reliability",
+          "direction": "accept",
+          "strength": 0.7
+        }
+      ]
+    },
+    {
+      "id": "decision_severity",
+      "type": "decision",
+      "label": "Severity Classification",
+      "description": "Classify incident severity level",
+      "position": {
+        "x": 1630,
+        "y": 442.5
+      },
+      "condition": "What severity level should this incident be classified as?",
+      "evaluateExpression": "{{blastRadius}}",
+      "weightBias": [
+        {
+          "dimension": "reliability",
+          "favorsBranch": "SEV-3/4 — Low",
+          "strength": 0.4
+        },
+        {
+          "dimension": "timeToMarket",
+          "favorsBranch": "SEV-1 — Critical",
+          "strength": 0.7
+        },
+        {
+          "dimension": "securityPosture",
+          "favorsBranch": "SEV-1 — Critical",
+          "strength": 0.8
+        }
+      ]
+    },
+    {
+      "id": "decision_mitigation",
+      "type": "decision",
+      "label": "Immediate Mitigation",
+      "description": "Choose the fastest path to mitigate user impact",
+      "position": {
+        "x": 2030,
+        "y": 195
+      },
+      "condition": "What is the fastest way to stop the bleeding?",
+      "evaluateExpression": "{{recentChange}}",
+      "weightBias": [
+        {
+          "dimension": "timeToMarket",
+          "favorsBranch": "Rollback",
+          "strength": 0.9
+        },
+        {
+          "dimension": "reliability",
+          "favorsBranch": "Feature flag / kill switch",
+          "strength": 0.5
+        },
+        {
+          "dimension": "archComplexity",
+          "favorsBranch": "Scale up / restart",
+          "strength": 0.3
+        }
+      ]
+    },
+    {
+      "id": "decision_rca",
+      "type": "decision",
+      "label": "Root Cause Category",
+      "description": "Determine the root cause category after mitigation",
+      "position": {
+        "x": 2030,
+        "y": 690
+      },
+      "condition": "After mitigating, what is the likely root cause category?",
+      "evaluateExpression": "{{alertType}}",
+      "weightBias": [
+        {
+          "dimension": "archComplexity",
+          "favorsBranch": "Systemic / architectural",
+          "strength": 0.7
+        },
+        {
+          "dimension": "timeToMarket",
+          "favorsBranch": "Code bug",
+          "strength": 0.5
+        },
+        {
+          "dimension": "securityPosture",
+          "favorsBranch": "Security incident",
+          "strength": 0.9
+        }
+      ]
+    },
+    {
+      "id": "action_rollback",
+      "type": "action",
+      "label": "Execute Rollback",
+      "description": "Step-by-step rollback procedure",
+      "position": {
+        "x": 2430,
+        "y": 30
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate an emergency rollback runbook.\n\nAlert: {{alertType}}\nBlast Radius: {{blastRadius}}\nRecent Change: {{recentChange}}\nCan Rollback: {{canRollback}}\n\nInclude:\n1. Pre-rollback checks (active connections, in-flight requests)\n2. Rollback command sequence for CI/CD pipeline\n3. Database migration rollback considerations\n4. Cache invalidation steps\n5. Health check verification post-rollback\n6. Stakeholder communication template\n7. Time-to-mitigate SLO tracking",
+      "systemPrompt": "You are an SRE incident commander. Speed is critical — provide concise, copy-paste-ready commands. Every minute of downtime matters."
+    },
+    {
+      "id": "action_feature_flag",
+      "type": "action",
+      "label": "Kill Switch / Feature Flag",
+      "description": "Disable problematic feature without full rollback",
+      "position": {
+        "x": 2430,
+        "y": 195
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a feature flag kill-switch procedure.\n\nAlert: {{alertType}}\nBlast Radius: {{blastRadius}}\nRecent Change: {{recentChange}}\n\nInclude:\n1. Identify the feature flag or config change to disable\n2. Flag toggle procedure (LaunchDarkly / Azure App Config / env var)\n3. Verify traffic stops hitting the broken path\n4. Monitor error rates for 5 minutes post-toggle\n5. Communicate status to stakeholders",
+      "systemPrompt": "You are an on-call engineer. Provide the fastest path to disabling the faulty feature without side effects."
+    },
+    {
+      "id": "action_scale",
+      "type": "action",
+      "label": "Scale Up / Restart",
+      "description": "Increase resources or restart services",
+      "position": {
+        "x": 2430,
+        "y": 360
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a resource scaling and restart procedure.\n\nAlert: {{alertType}}\nBlast Radius: {{blastRadius}}\nRecent Change: {{recentChange}}\n\nInclude:\n1. Current resource utilization assessment commands\n2. Horizontal scaling commands (kubectl scale / az container app update)\n3. Rolling restart procedure to avoid additional downtime\n4. Connection pool and rate limiter adjustment\n5. Auto-scale policy review and temporary override\n6. Memory leak detection if restarts only temporarily help",
+      "systemPrompt": "You are a platform engineer. Provide commands for both Kubernetes and Azure PaaS environments. Include monitoring queries to verify the scaling is helping."
+    },
+    {
+      "id": "action_rca_code",
+      "type": "action",
+      "label": "Code Bug Post-Mortem",
+      "description": "Root cause analysis for code-related incidents",
+      "position": {
+        "x": 2430,
+        "y": 525
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a post-mortem template for a code-related incident.\n\nAlert: {{alertType}}\nBlast Radius: {{blastRadius}}\nRecent Change: {{recentChange}}\n\nInclude:\n1. Timeline reconstruction (detection → mitigation → resolution)\n2. Root cause analysis (5 Whys framework)\n3. Code-level analysis: what line/function caused the issue\n4. Why existing tests didn't catch it\n5. Action items: preventive tests, code review checklist additions\n6. Blameless framing — focus on systems, not individuals\n7. SLO impact assessment and error budget burn",
+      "systemPrompt": "You are an SRE manager facilitating a blameless post-mortem. Focus on systemic improvements, not blame. Use the 5 Whys and ask 'how did the system allow this to happen?'"
+    },
+    {
+      "id": "action_rca_systemic",
+      "type": "action",
+      "label": "Systemic Post-Mortem",
+      "description": "Root cause analysis for architectural issues",
+      "position": {
+        "x": 2430,
+        "y": 690
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a post-mortem template for a systemic/architectural incident.\n\nAlert: {{alertType}}\nBlast Radius: {{blastRadius}}\n\nInclude:\n1. Failure domain analysis (what failed, what cascaded)\n2. Dependency graph of affected services\n3. Circuit breaker and bulkhead assessment\n4. Capacity planning gaps identified\n5. Architecture improvements (decouple, add redundancy, add caching)\n6. Chaos engineering tests to add\n7. Runbook updates for future incidents\n8. SLO/SLA impact and customer communication",
+      "systemPrompt": "You are a principal SRE. Analyze the systemic failure patterns, not just the proximate cause. Recommend architecture changes that prevent this class of failure."
+    },
+    {
+      "id": "action_rca_security",
+      "type": "action",
+      "label": "Security Incident Response",
+      "description": "Security-focused incident response and post-mortem",
+      "position": {
+        "x": 2430,
+        "y": 855
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a security incident response plan.\n\nAlert: {{alertType}}\nBlast Radius: {{blastRadius}}\nRecent Change: {{recentChange}}\n\nInclude:\n1. Containment: isolate affected systems immediately\n2. Evidence preservation (logs, snapshots, network captures)\n3. Credential rotation checklist\n4. Impact assessment: what data may be exposed?\n5. Regulatory notification requirements (GDPR, SOC2, HIPAA)\n6. Forensic investigation steps\n7. Communication plan (legal, PR, customers)\n8. Hardening action items post-incident",
+      "systemPrompt": "You are a security incident response lead. Containment comes first, then investigation. Assume breach until proven otherwise. Preserve evidence for potential legal proceedings."
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "input_alert",
+      "target": "input_impact"
+    },
+    {
+      "id": "e2",
+      "source": "input_impact",
+      "target": "input_recent_change"
+    },
+    {
+      "id": "e3",
+      "source": "input_recent_change",
+      "target": "assumption_rollback"
+    },
+    {
+      "id": "e4",
+      "source": "assumption_rollback",
+      "target": "decision_severity"
+    },
+    {
+      "id": "e5_crit",
+      "source": "decision_severity",
+      "target": "decision_mitigation",
+      "label": "SEV-1 — Critical"
+    },
+    {
+      "id": "e5_medium",
+      "source": "decision_severity",
+      "target": "decision_mitigation",
+      "label": "SEV-2 — Major"
+    },
+    {
+      "id": "e5_low",
+      "source": "decision_severity",
+      "target": "decision_rca",
+      "label": "SEV-3/4 — Low"
+    },
+    {
+      "id": "e6_rollback",
+      "source": "decision_mitigation",
+      "target": "action_rollback",
+      "label": "Rollback"
+    },
+    {
+      "id": "e6_flag",
+      "source": "decision_mitigation",
+      "target": "action_feature_flag",
+      "label": "Feature flag / kill switch"
+    },
+    {
+      "id": "e6_scale",
+      "source": "decision_mitigation",
+      "target": "action_scale",
+      "label": "Scale up / restart"
+    },
+    {
+      "id": "e7_code",
+      "source": "decision_rca",
+      "target": "action_rca_code",
+      "label": "Code bug"
+    },
+    {
+      "id": "e7_systemic",
+      "source": "decision_rca",
+      "target": "action_rca_systemic",
+      "label": "Systemic / architectural"
+    },
+    {
+      "id": "e7_security",
+      "source": "decision_rca",
+      "target": "action_rca_security",
+      "label": "Security incident"
+    }
+  ]
+}

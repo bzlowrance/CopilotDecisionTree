@@ -1,0 +1,355 @@
+{
+  "id": "troubleshoot-deploy",
+  "name": "Deployment Troubleshooter",
+  "description": "Diagnoses common deployment failures by walking through symptoms, assumptions, and resolution paths",
+  "version": "1.0.0",
+  "rootNodeId": "input_env",
+  "tags": [
+    "devops",
+    "troubleshooting",
+    "deployment"
+  ],
+  "createdAt": "2025-01-01T00:00:00Z",
+  "updatedAt": "2026-03-08T04:49:46.930Z",
+  "nodes": [
+    {
+      "id": "input_symptoms",
+      "type": "input",
+      "label": "Reported Symptoms",
+      "description": "What symptoms is the aircraft exhibiting?",
+      "position": {
+        "x": 30,
+        "y": 442.5
+      },
+      "prompt": "What primary symptom has been reported?",
+      "variableName": "symptom",
+      "inputType": "choice",
+      "choices": [
+        "Engine vibration / power loss",
+        "Avionics warning lights",
+        "Hydraulic pressure anomaly",
+        "Electrical system fault",
+        "Unusual sounds or odors"
+      ]
+    },
+    {
+      "id": "input_phase",
+      "type": "input",
+      "label": "Flight Phase",
+      "description": "When was the symptom first observed?",
+      "position": {
+        "x": 430,
+        "y": 442.5
+      },
+      "prompt": "During which flight phase was the symptom observed?",
+      "variableName": "flightPhase",
+      "inputType": "choice",
+      "choices": [
+        "Pre-flight / Ground",
+        "Takeoff / Climb",
+        "Cruise",
+        "Descent / Approach",
+        "Landing / Post-flight"
+      ]
+    },
+    {
+      "id": "input_severity",
+      "type": "input",
+      "label": "Severity Assessment",
+      "description": "How critical is the reported issue?",
+      "position": {
+        "x": 830,
+        "y": 442.5
+      },
+      "prompt": "What is the severity level of the fault?",
+      "variableName": "severity",
+      "inputType": "choice",
+      "choices": [
+        "MEL deferrable (minor)",
+        "Requires fix before next flight",
+        "Aircraft grounded (AOG)",
+        "Safety-of-flight critical"
+      ]
+    },
+    {
+      "id": "assumption_recent_mx",
+      "type": "assumption",
+      "label": "Recent Maintenance",
+      "description": "Assumes recent maintenance may be a contributing factor",
+      "position": {
+        "x": 1230,
+        "y": 442.5
+      },
+      "assumption": "The aircraft had maintenance performed within the last 72 hours. Recent work should be checked for installation errors or incomplete tasks.",
+      "variableName": "recentMaintenance",
+      "default": true,
+      "weightInfluence": [
+        {
+          "dimension": "riskTolerance",
+          "direction": "reject",
+          "strength": 0.8
+        },
+        {
+          "dimension": "speed",
+          "direction": "accept",
+          "strength": 0.5
+        }
+      ]
+    },
+    {
+      "id": "decision_system",
+      "type": "decision",
+      "label": "System Isolation",
+      "description": "Narrow down to the affected aircraft system",
+      "position": {
+        "x": 1630,
+        "y": 442.5
+      },
+      "condition": "Which aircraft system does the symptom pattern indicate?",
+      "evaluateExpression": "{{symptom}}",
+      "weightBias": [
+        {
+          "dimension": "security",
+          "favorsBranch": "Engine",
+          "strength": 0.9
+        },
+        {
+          "dimension": "dim1",
+          "favorsBranch": "Avionics",
+          "strength": 0.47
+        },
+        {
+          "dimension": "complexity",
+          "favorsBranch": "Hydraulics",
+          "strength": 0.5
+        }
+      ]
+    },
+    {
+      "id": "decision_engine",
+      "type": "decision",
+      "label": "Engine Fault Type",
+      "description": "Classify the engine fault",
+      "position": {
+        "x": 2030,
+        "y": 112.5
+      },
+      "condition": "Does the engine exhibit mechanical vibration or performance degradation?",
+      "evaluateExpression": "{{symptom}}",
+      "weightBias": [
+        {
+          "dimension": "security",
+          "favorsBranch": "Mechanical",
+          "strength": 0.8
+        },
+        {
+          "dimension": "speed",
+          "favorsBranch": "Performance",
+          "strength": 0.3
+        }
+      ]
+    },
+    {
+      "id": "decision_avionics",
+      "type": "decision",
+      "label": "Avionics Fault Scope",
+      "description": "Determine scope of avionics fault",
+      "position": {
+        "x": 2030,
+        "y": 442.5
+      },
+      "condition": "Is the fault isolated to one display/system or affecting multiple avionics buses?",
+      "evaluateExpression": "{{symptom}}",
+      "weightBias": [
+        {
+          "dimension": "complexity",
+          "favorsBranch": "Multi-bus",
+          "strength": 0.7
+        },
+        {
+          "dimension": "riskTolerance",
+          "favorsBranch": "Single system",
+          "strength": 0.4
+        }
+      ]
+    },
+    {
+      "id": "decision_hydraulic",
+      "type": "decision",
+      "label": "Hydraulic System Check",
+      "description": "Check hydraulic system indicators",
+      "position": {
+        "x": 2030,
+        "y": 772.5
+      },
+      "condition": "Is there visible fluid loss or is this a pressure-only indication?",
+      "evaluateExpression": "{{symptom}}",
+      "weightBias": [
+        {
+          "dimension": "security",
+          "favorsBranch": "Fluid loss",
+          "strength": 0.9
+        },
+        {
+          "dimension": "speed",
+          "favorsBranch": "Pressure only",
+          "strength": 0.3
+        }
+      ]
+    },
+    {
+      "id": "action_engine_mechanical",
+      "type": "action",
+      "label": "Engine Mechanical Diagnosis",
+      "description": "Detailed mechanical engine diagnosis procedure",
+      "position": {
+        "x": 2430,
+        "y": 30
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a step-by-step engine mechanical diagnosis procedure.\nSymptom: {{symptom}}\nFlight Phase: {{flightPhase}}\nSeverity: {{severity}}\nRecent Maintenance: {{recentMaintenance}}\n\nInclude:\n1. Borescope inspection checklist\n2. Vibration analysis parameters (N1/N2 tracking)\n3. Oil analysis interpretation\n4. MEL/CDL applicability\n5. Estimated repair time and AOG parts list\n6. Safety wire and torque verification steps",
+      "systemPrompt": "You are an A&P mechanic with IA authorization and 20 years of turbine engine experience. Provide precise, regulation-compliant diagnostic procedures referencing AMM chapters. Safety is paramount — when in doubt, ground the aircraft."
+    },
+    {
+      "id": "action_engine_performance",
+      "type": "action",
+      "label": "Engine Performance Analysis",
+      "description": "FADEC data and trend analysis procedure",
+      "position": {
+        "x": 2430,
+        "y": 195
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate an engine performance degradation analysis plan.\nSymptom: {{symptom}}\nFlight Phase: {{flightPhase}}\nSeverity: {{severity}}\n\nInclude:\n1. FADEC data download and parameter review\n2. EGT margin and trend analysis\n3. Fuel flow comparison to baseline\n4. Compressor wash evaluation\n5. Recommended engine trend monitoring schedule\n6. Go/No-go decision criteria",
+      "systemPrompt": "You are an aircraft engine performance engineer. Provide data-driven analysis procedures with clear numerical thresholds for go/no-go decisions."
+    },
+    {
+      "id": "action_avionics_single",
+      "type": "action",
+      "label": "Single LRU Replacement",
+      "description": "Isolated avionics component troubleshooting",
+      "position": {
+        "x": 2430,
+        "y": 360
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate an avionics LRU isolation and replacement procedure.\nSymptom: {{symptom}}\nFlight Phase: {{flightPhase}}\nSeverity: {{severity}}\n\nInclude:\n1. Built-In Test Equipment (BITE) codes to pull\n2. LRU swap procedure\n3. Wiring continuity check if swap doesn't resolve\n4. Post-replacement functional test\n5. Log book entry template (Part 43 compliant)",
+      "systemPrompt": "You are an avionics technician with authorization on glass cockpit systems. Reference applicable IPC part numbers and FIM procedures."
+    },
+    {
+      "id": "action_avionics_bus",
+      "type": "action",
+      "label": "Avionics Bus Fault Analysis",
+      "description": "Multi-system avionics bus investigation",
+      "position": {
+        "x": 2430,
+        "y": 525
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a comprehensive avionics bus fault investigation plan.\nSymptom: {{symptom}}\nFlight Phase: {{flightPhase}}\nSeverity: {{severity}}\n\nInclude:\n1. Affected bus identification (ARINC 429 / MIL-STD-1553 / Ethernet)\n2. Power supply and circuit breaker audit\n3. Data bus analyzer trace procedure\n4. Common mode failure analysis\n5. Grounding and shielding inspection\n6. Recommended aircraft ground time estimate",
+      "systemPrompt": "You are a senior avionics systems engineer. Provide systematic bus-level fault isolation procedures. Multi-system faults require grounding until root cause is confirmed."
+    },
+    {
+      "id": "action_hydraulic_leak",
+      "type": "action",
+      "label": "Hydraulic Leak Investigation",
+      "description": "Hydraulic fluid loss diagnosis and repair",
+      "position": {
+        "x": 2430,
+        "y": 690
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a hydraulic leak investigation and repair procedure.\nSymptom: {{symptom}}\nFlight Phase: {{flightPhase}}\nSeverity: {{severity}}\n\nInclude:\n1. Visual inspection zones (gear bay, flight control actuators, pumps)\n2. Fluid quantity trend analysis\n3. System pressurization ground test procedure\n4. Seal and fitting inspection checklist\n5. Fluid type verification and contamination check\n6. Return-to-service leak check criteria",
+      "systemPrompt": "You are a hydraulics specialist. Hydraulic fluid loss is always a grounding event until the source is identified and repaired. Provide thorough procedures."
+    },
+    {
+      "id": "action_hydraulic_pressure",
+      "type": "action",
+      "label": "Hydraulic Pressure Diagnosis",
+      "description": "Pressure anomaly without visible fluid loss",
+      "position": {
+        "x": 2430,
+        "y": 855
+      },
+      "actionType": "copilot_prompt",
+      "template": "Generate a hydraulic pressure anomaly diagnosis plan.\nSymptom: {{symptom}}\nFlight Phase: {{flightPhase}}\nSeverity: {{severity}}\n\nInclude:\n1. Pressure transducer verification\n2. Pump output test procedure\n3. Relief valve and check valve inspection\n4. Accumulator pre-charge verification\n5. System schematic analysis for internal bypass\n6. Minimum dispatch pressure criteria per MEL",
+      "systemPrompt": "You are a hydraulic systems engineer. Provide systematic pressure fault isolation procedures with specific test adapter part numbers and pressure ranges."
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "input_symptoms",
+      "target": "input_phase"
+    },
+    {
+      "id": "e2",
+      "source": "input_phase",
+      "target": "input_severity"
+    },
+    {
+      "id": "e3",
+      "source": "input_severity",
+      "target": "assumption_recent_mx"
+    },
+    {
+      "id": "e4",
+      "source": "assumption_recent_mx",
+      "target": "decision_system"
+    },
+    {
+      "id": "e5_engine",
+      "source": "decision_system",
+      "target": "decision_engine",
+      "label": "Engine"
+    },
+    {
+      "id": "e5_avionics",
+      "source": "decision_system",
+      "target": "decision_avionics",
+      "label": "Avionics"
+    },
+    {
+      "id": "e5_hydraulic",
+      "source": "decision_system",
+      "target": "decision_hydraulic",
+      "label": "Hydraulics"
+    },
+    {
+      "id": "e6_mech",
+      "source": "decision_engine",
+      "target": "action_engine_mechanical",
+      "label": "Mechanical"
+    },
+    {
+      "id": "e6_perf",
+      "source": "decision_engine",
+      "target": "action_engine_performance",
+      "label": "Performance"
+    },
+    {
+      "id": "e7_single",
+      "source": "decision_avionics",
+      "target": "action_avionics_single",
+      "label": "Single system"
+    },
+    {
+      "id": "e7_bus",
+      "source": "decision_avionics",
+      "target": "action_avionics_bus",
+      "label": "Multi-bus"
+    },
+    {
+      "id": "e8_leak",
+      "source": "decision_hydraulic",
+      "target": "action_hydraulic_leak",
+      "label": "Fluid loss"
+    },
+    {
+      "id": "e8_pressure",
+      "source": "decision_hydraulic",
+      "target": "action_hydraulic_pressure",
+      "label": "Pressure only"
+    }
+  ]
+}
