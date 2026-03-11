@@ -33,8 +33,10 @@ Deploy the app as a hosted service any team can access.
 - [ ] **Azure App Service** deployment via `azd init` + Bicep
 - [ ] **Azure Static Web Apps** for the React client
 - [ ] **Azure Key Vault** for token/secret management
-- [ ] **GitHub Actions CI/CD** — build, test, deploy on push
-- [ ] **Environment config** — staging vs production tree sets
+- [x] **GitHub Actions CI/CD** — build, test, deploy on push *(v1.4.0 — CI pipeline with lint/typecheck/test/build + CD pipeline with staging auto-deploy, approval gate, and production slot swap)*
+- [x] **Environment config** — staging vs production tree sets *(v1.4.0 — staging deployment slot with smoke tests, manual approval gate before production swap)*
+- [x] **Codespaces dev container** — `.devcontainer/devcontainer.json` with Node 22, auto-install, port forwarding *(v1.4.0)*
+- [x] **Comprehensive test suites** — 136 tests (Vitest) across server and client: tree-engine, routes, agent, weight-utils, API wrappers *(v1.4.0)*
 
 ---
 
