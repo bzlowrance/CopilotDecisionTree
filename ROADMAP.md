@@ -6,11 +6,11 @@
 
 ## Phase 1 — Polish & Ship (Done)
 
-- [x] Fix session start performance (SDK init deferred)
-- [x] Multiselect input type across all components
-- [x] Weight injection into Copilot prompts (AI output shaped by sliders)
-- [x] Demo tree: GitHub Copilot Extension Planner
-- [x] Demo recording script
+- ✅ Fix session start performance (SDK init deferred)
+- ✅ Multiselect input type across all components
+- ✅ Weight injection into Copilot prompts (AI output shaped by sliders)
+- ✅ Demo tree: GitHub Copilot Extension Planner
+- ✅ Demo recording script
 
 ---
 
@@ -33,10 +33,10 @@ Deploy the app as a hosted service and integrate with Azure/Microsoft solutions.
 - [ ] **Azure App Service** deployment via `azd init` + Bicep *(25 pts — Azure/Microsoft integration)*
 - [ ] **Azure Static Web Apps** for the React client *(25 pts — Azure/Microsoft integration)*
 - [ ] **Azure Key Vault** for token/secret management *(25 pts — Azure/Microsoft integration)*
-- [x] **GitHub Actions CI/CD** — build, test, deploy on push *(v1.4.0)* *(15 pts — Operational readiness)*
-- [x] **Environment config** — staging vs production tree sets *(v1.4.0)* *(15 pts — Operational readiness)*
-- [x] **Codespaces dev container** — `.devcontainer/devcontainer.json` with Node 22, auto-install, port forwarding *(v1.4.0)* *(15 pts — Operational readiness)*
-- [x] **Comprehensive test suites** — 136 tests (Vitest) across server and client: tree-engine, routes, agent, weight-utils, API wrappers *(v1.4.0)* *(15 pts — Operational readiness)*
+- ✅ **GitHub Actions CI/CD** — build, test, deploy on push *(v1.4.0)* *(15 pts — Operational readiness)*
+- ✅ **Environment config** — staging vs production tree sets *(v1.4.0)* *(15 pts — Operational readiness)*
+- ✅ **Codespaces dev container** — `.devcontainer/devcontainer.json` with Node 22, auto-install, port forwarding *(v1.4.0)* *(15 pts — Operational readiness)*
+- ✅ **Comprehensive test suites** — 136 tests (Vitest) across server and client: tree-engine, routes, agent, weight-utils, API wrappers *(v1.4.0)* *(15 pts — Operational readiness)*
 - [ ] **Azure Application Insights** — observability, telemetry, and monitoring for production runs *(25 pts — Azure/Microsoft integration)*
 - [ ] **Azure Monitor** — alerting on tree execution failures, SDK errors, latency *(25 pts — Azure/Microsoft integration)*
 
