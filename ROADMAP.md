@@ -1,10 +1,31 @@
 # Roadmap — Copilot Decision Tree
 
 > Living document. Items are ordered by estimated impact for adoption and competition differentiation.
+> 
+> **Challenge alignment:** Items tagged with 🏆 map to [FY26 SDK Challenge](https://microsoft.sharepoint.com/teams/GithubSales/SitePages/FY26SDKChallenge.aspx) judging criteria.
 
 ---
 
-## Phase 1 — Polish & Ship (Now)
+## Phase 0 — SDK Challenge Submission Requirements
+
+Required repo artifacts for the FY26 GitHub Copilot SDK Enterprise Challenge.
+
+- [x] Working solution with code in a GitHub repo *(server/ + client/)*
+- [x] README with problem → solution, prereqs, setup, architecture diagram
+- [x] 150-word project summary *(in README)*
+- [ ] 🏆 **`/docs` folder** — consolidate README content into `/docs/README.md` with explicit sections: problem → solution, prerequisites, setup, deployment, architecture diagram, **Responsible AI (RAI) notes**
+- [ ] 🏆 **RAI notes** — document Responsible AI considerations: data handling, bias mitigation in weight system, transparency of assumptions, human-in-the-loop design, content filtering
+- [ ] 🏆 **`AGENTS.md`** — custom agent instructions file (required by challenge)
+- [ ] 🏆 **`mcp.json`** — MCP server configuration (if applicable, or document why N/A)
+- [ ] 🏆 **`/presentations/CopilotDecisionTree.pptx`** — 1–2 slide deck with business value proposition, architecture diagram, and repo link
+- [ ] 🏆 **Demo video** — 3-minute video of the solution in action
+- [x] Demo recording script *(DEMO-SCRIPT.md)*
+- [ ] 🏆 **`/customer` folder** — customer testimonial release or validation document *(bonus: +10 pts)*
+- [ ] 🏆 **Copilot SDK product feedback** — post feedback in SDK team channel + screenshot *(bonus: +10 pts)*
+
+---
+
+## Phase 1 — Polish & Ship (Done)
 
 - [x] Fix session start performance (SDK init deferred)
 - [x] Multiselect input type across all components
@@ -26,17 +47,21 @@ Wrap the tree runner as a native VS Code extension so developers never leave the
 
 ---
 
-## Phase 3 — Azure Deployment
+## Phase 3 — Azure Deployment & Integration
 
-Deploy the app as a hosted service any team can access.
+Deploy the app as a hosted service and integrate with Azure/Microsoft solutions.
+> 🏆 *Azure/Microsoft integration = 25 pts; Operational readiness = 15 pts*
 
-- [ ] **Azure App Service** deployment via `azd init` + Bicep
-- [ ] **Azure Static Web Apps** for the React client
-- [ ] **Azure Key Vault** for token/secret management
-- [x] **GitHub Actions CI/CD** — build, test, deploy on push *(v1.4.0 — CI pipeline with lint/typecheck/test/build + CD pipeline with staging auto-deploy, approval gate, and production slot swap)*
-- [x] **Environment config** — staging vs production tree sets *(v1.4.0 — staging deployment slot with smoke tests, manual approval gate before production swap)*
-- [x] **Codespaces dev container** — `.devcontainer/devcontainer.json` with Node 22, auto-install, port forwarding *(v1.4.0)*
-- [x] **Comprehensive test suites** — 136 tests (Vitest) across server and client: tree-engine, routes, agent, weight-utils, API wrappers *(v1.4.0)*
+- [ ] 🏆 **Azure App Service** deployment via `azd init` + Bicep
+- [ ] 🏆 **Azure Static Web Apps** for the React client
+- [ ] 🏆 **Azure Key Vault** for token/secret management
+- [x] 🏆 **GitHub Actions CI/CD** — build, test, deploy on push *(v1.4.0 — CI pipeline with lint/typecheck/test/build + CD pipeline with staging auto-deploy, approval gate, and production slot swap)*
+- [x] 🏆 **Environment config** — staging vs production tree sets *(v1.4.0 — staging deployment slot with smoke tests, manual approval gate before production swap)*
+- [x] 🏆 **Codespaces dev container** — `.devcontainer/devcontainer.json` with Node 22, auto-install, port forwarding *(v1.4.0)*
+- [x] 🏆 **Comprehensive test suites** — 136 tests (Vitest) across server and client: tree-engine, routes, agent, weight-utils, API wrappers *(v1.4.0)*
+- [ ] 🏆 **Azure Application Insights** — observability, telemetry, and monitoring for production runs
+- [ ] 🏆 **Azure Monitor** — alerting on tree execution failures, SDK errors, latency
+- [ ] 🏆 **Work IQ / Fabric IQ / Foundry IQ integration** — connect decision tree data to Microsoft IQ surfaces *(bonus: +15 pts)*
 
 ---
 
@@ -99,15 +124,18 @@ A Cortana Blue digital avatar narrates tree execution with synthesized speech us
 
 ---
 
-## Phase 8 — Enterprise & Governance
+## Phase 8 — Enterprise, Security & Governance
 
 Features for regulated industries and large orgs.
+> 🏆 *Security, governance & Responsible AI = 15 pts; Enterprise applicability = 30 pts*
 
-- [ ] **RBAC** — control who can edit trees vs. run them
-- [ ] **Audit trail** — full decision trace with timestamps, user identity, weight snapshots
-- [ ] **Compliance templates** — pre-built trees for HIPAA, SOC2, FedRAMP onboarding
-- [ ] **Approval gates** — action nodes that require human approval before executing
-- [ ] **Telemetry dashboard** — which trees get used, where people drop off, which weights get changed
+- [ ] 🏆 **RBAC** — control who can edit trees vs. run them
+- [ ] 🏆 **Audit trail** — full decision trace with timestamps, user identity, weight snapshots
+- [ ] 🏆 **Compliance templates** — pre-built trees for HIPAA, SOC2, FedRAMP onboarding
+- [ ] 🏆 **Approval gates** — action nodes that require human approval before executing
+- [ ] 🏆 **Telemetry dashboard** — which trees get used, where people drop off, which weights get changed
+- [ ] 🏆 **Content filtering** — integrate Azure Content Safety to filter Copilot SDK outputs
+- [ ] 🏆 **Secret scanning** — ensure no tokens or secrets are persisted in session traces or tree definitions
 
 ---
 
