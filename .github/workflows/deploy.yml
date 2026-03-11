@@ -1,0 +1,168 @@
+# ──────────────────────────────────────────────────────
+# Deploy — Staging (auto) → Production (gated approval)
+#
+# Triggers when CI passes on main branch.
+# Uses Azure App Service deployment slots:
+#   1. Deploys to "staging" slot automatically
+#   2. Waits for manual approval in GitHub Environment
+#   3. Swaps staging → production & restarts
+# ──────────────────────────────────────────────────────
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  AZURE_WEBAPP_NAME: decision-tree-copilot   # ← Change to your App Service name
+  AZURE_RESOURCE_GROUP: rg-decision-tree      # ← Change to your resource group
+  SLOT_NAME: staging
+
+jobs:
+  # ────────────────────────────────────────────────────
+  # Stage 1: Deploy to Staging slot (automatic)
+  # ────────────────────────────────────────────────────
+  deploy-staging:
+    name: Deploy → Staging
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    environment:
+      name: staging
+      url: https://${{ env.AZURE_WEBAPP_NAME }}-${{ env.SLOT_NAME }}.azurewebsites.net
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build-${{ github.event.workflow_run.head_sha }}
+          path: deploy
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare deployment package
+        run: |
+          mkdir -p package/server/dist
+          mkdir -p package/client/dist
+          mkdir -p package/trees
+
+          cp -r deploy/server-dist/* package/server/dist/
+          cp -r deploy/client-dist/* package/client/dist/
+          cp -r deploy/trees/* package/trees/
+          cp deploy/package.json package/
+          cp deploy/server-package.json package/server/package.json
+
+          # Create a startup wrapper for App Service
+          cat > package/server/dist/startup.js << 'EOF'
+          // Serve the Vite-built client as static files from Express
+          import express from 'express';
+          import path from 'path';
+          import { fileURLToPath } from 'url';
+
+          const __dirname = path.dirname(fileURLToPath(import.meta.url));
+          const clientDist = path.join(__dirname, '../../client/dist');
+
+          // Patch: serve client static files from /
+          // The main server index.js handles API routes; we add static serving
+          export function mountClient(app) {
+            app.use(express.static(clientDist));
+            app.get('*', (req, res, next) => {
+              if (req.path.startsWith('/api')) return next();
+              res.sendFile(path.join(clientDist, 'index.html'));
+            });
+          }
+          EOF
+
+          # Install production deps only
+          cd package
+          npm install --workspace=server --omit=dev --ignore-scripts 2>/dev/null || \
+            cd server && npm install --omit=dev --ignore-scripts && cd ..
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to staging slot
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          slot-name: ${{ env.SLOT_NAME }}
+          package: package
+
+      - name: Restart staging slot
+        run: |
+          az webapp restart \
+            --name "${{ env.AZURE_WEBAPP_NAME }}" \
+            --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+            --slot "${{ env.SLOT_NAME }}"
+
+      - name: Smoke test staging
+        run: |
+          STAGING_URL="https://${{ env.AZURE_WEBAPP_NAME }}-${{ env.SLOT_NAME }}.azurewebsites.net"
+          echo "Waiting for staging to come up..."
+          for i in {1..30}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$STAGING_URL/api/trees" || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "✓ Staging is healthy (HTTP $STATUS)"
+              exit 0
+            fi
+            echo "  Attempt $i: HTTP $STATUS — retrying in 10s..."
+            sleep 10
+          done
+          echo "✗ Staging failed health check after 5 minutes"
+          exit 1
+
+  # ────────────────────────────────────────────────────
+  # Stage 2: Promote to Production (manual approval gate)
+  # ────────────────────────────────────────────────────
+  deploy-production:
+    name: Promote → Production
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+
+    environment:
+      name: production               # ← Requires manual approval in GitHub Settings
+      url: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net
+
+    steps:
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Swap staging → production
+        run: |
+          az webapp deployment slot swap \
+            --name "${{ env.AZURE_WEBAPP_NAME }}" \
+            --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+            --slot "${{ env.SLOT_NAME }}" \
+            --target-slot production
+
+      - name: Restart production
+        run: |
+          az webapp restart \
+            --name "${{ env.AZURE_WEBAPP_NAME }}" \
+            --resource-group "${{ env.AZURE_RESOURCE_GROUP }}"
+
+      - name: Smoke test production
+        run: |
+          PROD_URL="https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
+          echo "Verifying production..."
+          for i in {1..20}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_URL/api/trees" || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "✓ Production is healthy (HTTP $STATUS)"
+              exit 0
+            fi
+            echo "  Attempt $i: HTTP $STATUS — retrying in 10s..."
+            sleep 10
+          done
+          echo "✗ Production failed health check"
+          exit 1

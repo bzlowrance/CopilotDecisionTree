@@ -198,6 +198,28 @@ cp server/.env.example server/.env
 npm run dev
 ```
 
+---
+
+## CI/CD & Deployment
+
+This project includes a full GitHub Actions pipeline that automates quality checks and deploys to Azure App Service:
+
+| Stage | What Happens | Trigger |
+|-------|-------------|---------|
+| **CI** | Lint → Type-check → Test → Build | Every push & PR |
+| **Deploy → Staging** | Automatic deploy to staging slot + smoke test | CI passes on `main` |
+| **Deploy → Production** | Manual approval gate → zero-downtime slot swap | Reviewer approves |
+
+### Pipeline Files
+
+| File | Purpose |
+|------|---------|
+| [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Continuous Integration |
+| [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) | Staging + Production deployment |
+| [`.devcontainer/devcontainer.json`](.devcontainer/devcontainer.json) | GitHub Codespaces configuration |
+
+> **📘 Full documentation:** See **[TEST.md](TEST.md)** for the complete testing, CI/CD, and deployment guide — including infrastructure setup, adding tests & linting, GitHub Environment approval gates, troubleshooting, and rollback procedures.
+
 - **Frontend**: http://localhost:5173
 - **Backend**: http://localhost:3001
 

@@ -6,6 +6,28 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.4.0] — 2026-03-11
+
+### Added
+- **Comprehensive test suites** — 136 tests across server and client, all passing.
+  - `server/src/__tests__/tree-engine.test.ts` — 45 unit tests covering session lifecycle, linear/branching/assumption/decision flow, weight-biased decisions, feedback loops, template interpolation, multi-step traversal, weight updates, and edge cases.
+  - `server/src/__tests__/routes.test.ts` — 18 integration tests exercising all REST endpoints (CRUD, sessions, pipeline, weights, auth) against a real Express server with mocked agent.
+  - `server/src/__tests__/agent.test.ts` — 20 unit tests for config management, auth/models via mocked Copilot SDK, tree execution, and pipeline runs (linear, multi-step, feedback loop, custom weights).
+  - `client/src/__tests__/weight-utils.test.ts` — 26 unit tests for `FALLBACK_WEIGHTS`, `buildProfiles()`, `getTreeWeights()`, `labelToId()`, and `createWeightDimension()`.
+  - `client/src/__tests__/api.test.ts` — 27 unit tests for all API wrapper functions with mocked fetch, verifying URLs, methods, request bodies, and error handling.
+  - `server/src/__tests__/fixtures.ts` — 6 reusable tree factories (linear, branching, assumption, weight-biased, feedback loop, multi-step) shared across server tests.
+- **Vitest configuration** — `vitest.config.ts` added to both server (node environment) and client (jsdom environment with React plugin and setup file).
+- **CI pipeline** (`.github/workflows/ci.yml`) — lint, typecheck, test, and build on every push/PR. Concurrency groups cancel in-progress runs. Uploads build artifact for deployment.
+- **CD pipeline** (`.github/workflows/deploy.yml`) — automatic staging deployment on CI success for `main`, with smoke tests (30 retries). Manual approval gate before production slot swap.
+- **Codespaces support** (`.devcontainer/devcontainer.json`) — Node 22 dev container with automatic dependency install and port forwarding for 3001/5173.
+- **TEST.md** — full documentation of the CI/CD pipeline, quality gates, adding tests guide, Azure infrastructure setup, GitHub Secrets/Environments configuration, and troubleshooting.
+
+### Changed
+- **`package.json` scripts** — added `test` and `test:watch` to both server and client workspaces.
+- **`README.md`** — added CI/CD & Deployment section with pipeline summary table and reference to TEST.md.
+
+---
+
 ## [1.3.1] — 2026-03-08
 
 ### Fixed

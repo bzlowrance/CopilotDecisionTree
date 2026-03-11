@@ -1,0 +1,79 @@
+# ──────────────────────────────────────────────────────
+# CI — runs on every push & PR to main/develop
+# Lint → Type-check → Test → Build
+# ──────────────────────────────────────────────────────
+name: CI
+
+on:
+  push:
+    branches: [main, develop, "feature/**"]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Lint / Typecheck / Test / Build
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [22]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ── Lint ──────────────────────────────────────
+      - name: Lint (server)
+        run: npm run lint --workspace=server --if-present
+
+      - name: Lint (client)
+        run: npm run lint --workspace=client --if-present
+
+      # ── Type-check ────────────────────────────────
+      - name: Typecheck (server)
+        run: npx --workspace=server tsc --noEmit
+
+      - name: Typecheck (client)
+        run: npx --workspace=client tsc --noEmit
+
+      # ── Tests ─────────────────────────────────────
+      - name: Test (server)
+        run: npm test --workspace=server --if-present
+
+      - name: Test (client)
+        run: npm test --workspace=client --if-present
+
+      # ── Build ─────────────────────────────────────
+      - name: Build
+        run: npm run build
+
+      # ── Upload build artifact for deploy jobs ─────
+      - name: Prepare deployment artifact
+        run: |
+          mkdir -p staging-artifact
+          cp -r server/dist staging-artifact/server-dist
+          cp -r client/dist staging-artifact/client-dist
+          cp -r trees staging-artifact/trees
+          cp package.json staging-artifact/
+          cp server/package.json staging-artifact/server-package.json
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-build-${{ github.sha }}
+          path: staging-artifact/
+          retention-days: 7
